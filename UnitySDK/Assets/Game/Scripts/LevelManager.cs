@@ -10,6 +10,7 @@ public class LevelManager : MonoBehaviour {
 	public int blockAmount = 10;
 
 	public ZomboxAgent[] agents;
+	public Transform spawnPoint;
 	// Use this for initialization
 	void Start () {
 		// spawn blocks randomly around the area
@@ -17,19 +18,26 @@ public class LevelManager : MonoBehaviour {
 		{
 			GameObject blockClone = Instantiate(
 				block,
-				new Vector3(Random.Range(-23.0f, 23.0f), 1.0f, Random.Range(-10.0f, 10.0f)),
+				getRandomSpawnLocation(),
 				Quaternion.identity
 			);
 		}
 	}
-	
-	// Update is called once per frame
-	void Update () {
-		
+	Vector3 getRandomSpawnLocation() {
+		return new Vector3(Random.Range(-23.0f, 23.0f), 1.0f, Random.Range(-10.0f, 10.0f));
 	}
-
-	// rewards the agents when a block makes it to the goal
-	public void rewardAgents () {
+	// respawns a fallen agent
+	// TODO: respawn the agent to their faction
+	public void respawnAgent(GameObject agent) {
+		agent.transform.localPosition = spawnPoint.localPosition;
+		ZomboxAgent ag = agent.GetComponent<ZomboxAgent>();
+		ag.resetVelocity();
+	}
+	public void respawnBlock(GameObject block) {
+		block.transform.localPosition = getRandomSpawnLocation();
+		Rigidbody blockRB = block.GetComponent<Rigidbody>();
+		blockRB.velocity = Vector3.zero;
+		blockRB.angularVelocity = Vector3.zero;
 
 	}
 }

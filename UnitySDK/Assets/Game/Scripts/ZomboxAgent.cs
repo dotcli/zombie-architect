@@ -84,18 +84,6 @@ public class ZomboxAgent : Agent
     }
 
     /// <summary>
-    /// Called when the agent moves the block into the goal.
-    /// </summary>
-    public void IScoredAGoal()
-    {
-        // We use a reward of 5.
-        AddReward(5f);
-
-        // By marking an agent as done AgentReset() will be called automatically.
-        Done();
-    }
-
-    /// <summary>
     /// Moves the agent according to the selected action.
     /// </summary>
 	public void MoveAgent(float[] act)
@@ -141,8 +129,10 @@ public class ZomboxAgent : Agent
     {
         // Move the agent using the action.
         MoveAgent(vectorAction);
+    }
 
-        // Penalty given each step to encourage agent to finish task quickly.
-        AddReward(-1f / agentParameters.maxStep);
+    public void resetVelocity() {
+        agentRB.velocity = Vector3.zero;
+        agentRB.angularVelocity = Vector3.zero;
     }
 }
