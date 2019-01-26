@@ -26,7 +26,7 @@ GameObject:
   - component: {fileID: 114039734338394730}
   m_Layer: 0
   m_Name: King A
-  m_TagString: agent
+  m_TagString: agentA
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -197,7 +197,7 @@ MonoBehaviour:
   areaBounds:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 0, y: 0, z: 0}
-  detectableTags: block goal edge agent ground
+  detectableTags: block edge ground goalA goalB agentA agentB
   useVectorObs: 1
 --- !u!114 &114388088170714652
 MonoBehaviour:

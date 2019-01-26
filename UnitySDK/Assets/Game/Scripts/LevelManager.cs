@@ -8,7 +8,8 @@ public class LevelManager : MonoBehaviour {
 	public GameObject block;
 	public int blockAmount = 10;
 
-	public Transform spawnPoint;
+	public Transform spawnPointA;
+	public Transform spawnPointB;
 	// Use this for initialization
 	void Start () {
 		// spawn blocks randomly around the area
@@ -25,9 +26,13 @@ public class LevelManager : MonoBehaviour {
 		return new Vector3(Random.Range(-23.0f, 23.0f), 1.0f, Random.Range(-10.0f, 10.0f));
 	}
 	// respawns a fallen agent
-	// TODO: respawn the agent to their faction
-	public void respawnAgent(GameObject agent) {
-		agent.transform.localPosition = spawnPoint.localPosition;
+	public void respawnAgentA(GameObject agent) {
+		agent.transform.localPosition = spawnPointA.localPosition;
+		ZomboxAgent ag = agent.GetComponent<ZomboxAgent>();
+		ag.resetVelocity();
+	}
+	public void respawnAgentB(GameObject agent) {
+		agent.transform.localPosition = spawnPointB.localPosition;
 		ZomboxAgent ag = agent.GetComponent<ZomboxAgent>();
 		ag.resetVelocity();
 	}
@@ -43,5 +48,6 @@ public class LevelManager : MonoBehaviour {
 	}
 	public void registerGoalB() {
 		// TODO: increment score of B by 1
+		Debug.Log("B Score!");
 	}
 }

@@ -27,6 +27,10 @@ TagManager:
   - switchOn
   - stone
   - edge
+  - agentA
+  - goalA
+  - agentB
+  - goalB
   layers:
   - Default
   - TransparentFX

@@ -8,10 +8,20 @@ public class TriggerFall : MonoBehaviour {
 		_Level = FindObjectOfType<LevelManager>();
 	}
 	void OnTriggerEnter(Collider col) {
-		if (col.gameObject.tag == "agent") {
-			_Level.respawnAgent(col.gameObject);
-		} else if (col.gameObject.tag == "block") {
-			_Level.respawnBlock(col.gameObject);
+		switch (col.gameObject.tag)
+		{
+				case "agentA":
+					_Level.respawnAgentA(col.gameObject);
+					break;
+				case "agentB":
+					_Level.respawnAgentB(col.gameObject);
+					break;
+				case "block":
+					_Level.respawnBlock(col.gameObject);
+					break;
+				default:
+					Debug.Log("Oh no, a " + col.gameObject.tag + " fell.");
+					break;
 		}
 	}
 
