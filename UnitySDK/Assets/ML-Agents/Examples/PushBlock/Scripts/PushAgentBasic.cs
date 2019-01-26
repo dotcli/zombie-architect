@@ -33,6 +33,11 @@ public class PushAgentBasic : Agent
     public GameObject block;
 
     /// <summary>
+    /// The tags the agent can see via raycasting
+    /// </summary>
+    public string detectableTags = "block goal wall";
+
+    /// <summary>
     /// Detects when the block touches the goal.
     /// </summary>
 	[HideInInspector]
@@ -80,7 +85,8 @@ public class PushAgentBasic : Agent
         {
             var rayDistance = 12f;
             float[] rayAngles = { 0f, 45f, 90f, 135f, 180f, 110f, 70f };
-            var detectableObjects = new[] { "block", "goal", "wall" };
+//            var detectableObjects = new[] { "block", "goal", "wall", "agent" };
+            var detectableObjects = detectableTags.Split(' ');
             AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 0f, 0f));
             AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 1.5f, 0f));
         }
