@@ -61,6 +61,30 @@ PushBlockLearning:
     use_recurrent: false
     sequence_length: 16
 
+PushBlockLearningTeam:
+    trainer: online_bc
+    max_steps: 10000
+    summary_freq: 1000
+    brain_to_imitate: PushBlockPlayer
+    batch_size: 16
+    batches_per_epoch: 5
+    num_layers: 4
+    hidden_units: 64
+    use_recurrent: false
+    sequence_length: 16
+
+GameLearningBrain:
+    trainer: online_bc
+    max_steps: 10000
+    summary_freq: 1000
+    brain_to_imitate: GamePlayerBrain
+    batch_size: 16
+    batches_per_epoch: 5
+    num_layers: 4
+    hidden_units: 64
+    use_recurrent: false
+    sequence_length: 16
+
 PyramidsLearning:
     trainer: online_bc
     max_steps: 10000

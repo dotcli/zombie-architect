@@ -189,6 +189,7 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   goal: {fileID: 879330245}
   block: {fileID: 879330244}
+  detectableTags: block goal wall agent
   goalDetect: {fileID: 0}
   useVectorObs: 1
 --- !u!54 &155117661
@@ -859,6 +860,11 @@ Prefab:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: cfea1fb6deccaca448b5c835678f06b0, type: 2}
+    - target: {fileID: 114971011603382192, guid: bed6005cc2a1a47edafba27cde6b5538,
+        type: 2}
+      propertyPath: detectableTags
+      value: block goal wall agent
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bed6005cc2a1a47edafba27cde6b5538, type: 2}
   m_IsPrefabAsset: 0
@@ -925,6 +931,11 @@ Prefab:
     - target: {fileID: 4515921445380902, guid: 383346ed7fb5e4b9394c59dd32ca88ec, type: 2}
       propertyPath: m_RootOrder
       value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 114346648244373772, guid: 383346ed7fb5e4b9394c59dd32ca88ec,
+        type: 2}
+      propertyPath: detectableTags
+      value: block goal wall agent
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 383346ed7fb5e4b9394c59dd32ca88ec, type: 2}
@@ -1029,6 +1040,7 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   goal: {fileID: 786404991}
   block: {fileID: 786404990}
+  detectableTags: block goal wall agent
   goalDetect: {fileID: 0}
   useVectorObs: 1
 --- !u!54 &990262533
@@ -1608,6 +1620,7 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   goal: {fileID: 786404991}
   block: {fileID: 786404990}
+  detectableTags: block goal wall agent
   goalDetect: {fileID: 0}
   useVectorObs: 1
 --- !u!54 &1242641133
@@ -1814,6 +1827,7 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   goal: {fileID: 879330245}
   block: {fileID: 879330244}
+  detectableTags: block goal wall agent
   goalDetect: {fileID: 0}
   useVectorObs: 1
 --- !u!54 &1391692922
@@ -1964,6 +1978,7 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   goal: {fileID: 786404991}
   block: {fileID: 786404990}
+  detectableTags: block goal wall agent
   goalDetect: {fileID: 0}
   useVectorObs: 1
 --- !u!54 &1468271787
@@ -2181,6 +2196,7 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   goal: {fileID: 879330245}
   block: {fileID: 879330244}
+  detectableTags: block goal wall agent
   goalDetect: {fileID: 0}
   useVectorObs: 1
 --- !u!54 &1698723403
@@ -2331,6 +2347,7 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   goal: {fileID: 786404991}
   block: {fileID: 786404990}
+  detectableTags: block goal wall agent
   goalDetect: {fileID: 0}
   useVectorObs: 1
 --- !u!54 &1901188599
@@ -2481,6 +2498,7 @@ MonoBehaviour:
     m_Extent: {x: 0, y: 0, z: 0}
   goal: {fileID: 879330245}
   block: {fileID: 879330244}
+  detectableTags: block goal wall agent
   goalDetect: {fileID: 0}
   useVectorObs: 1
 --- !u!54 &2119081998
