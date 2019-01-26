@@ -75,7 +75,7 @@ PushBlockLearningTeam:
 
 GameLearningBrainA:
     trainer: online_bc
-    max_steps: 10000
+    max_steps: 100000
     summary_freq: 1000
     brain_to_imitate: GamePlayerBrainA
     batch_size: 16
@@ -87,7 +87,7 @@ GameLearningBrainA:
 
 GameLearningBrainB:
     trainer: online_bc
-    max_steps: 10000
+    max_steps: 100000
     summary_freq: 1000
     brain_to_imitate: GamePlayerBrainB
     batch_size: 16
