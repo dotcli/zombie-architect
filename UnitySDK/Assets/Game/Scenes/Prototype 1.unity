@@ -212,7 +212,7 @@ GameObject:
   - component: {fileID: 104919486}
   - component: {fileID: 104919485}
   m_Layer: 0
-  m_Name: goalDetectA
+  m_Name: goalDetect A
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -668,10 +668,6 @@ Prefab:
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 1445721744193366, guid: d143199884071c948b8f5a836cb596be, type: 2}
-      propertyPath: m_Name
-      value: King A
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d143199884071c948b8f5a836cb596be, type: 2}
   m_IsPrefabAsset: 0
@@ -891,7 +887,7 @@ GameObject:
   m_Component:
   - component: {fileID: 521416452}
   m_Layer: 0
-  m_Name: SpawnPoint
+  m_Name: SpawnPoint A
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

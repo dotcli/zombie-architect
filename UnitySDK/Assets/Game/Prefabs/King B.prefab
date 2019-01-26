@@ -22,8 +22,8 @@ GameObject:
   - component: {fileID: 54918859191622516}
   - component: {fileID: 114934987289337448}
   - component: {fileID: 114525175469818042}
-  - component: {fileID: 114213860746698394}
   - component: {fileID: 65924729984762960}
+  - component: {fileID: 114011135224099260}
   m_Layer: 0
   m_Name: King B
   m_TagString: agent
@@ -69,7 +69,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1697079493702246}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 16.5, y: 1, z: 0}
+  m_LocalPosition: {x: 20.6, y: 1, z: 0}
   m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
   m_Children:
   - {fileID: 4577693115810030}
@@ -163,19 +163,19 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
---- !u!114 &114213860746698394
+--- !u!114 &114011135224099260
 MonoBehaviour:
   m_ObjectHideFlags: 1
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1697079493702246}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d1cf16abc39fb4d6ca81222fc73d1bb5, type: 3}
+  m_Script: {fileID: 11500000, guid: 39eb177c091764d40abc3cf2bfffe688, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  recordKey: 114
-  resetKey: 99
+  recordKey: 111
+  resetKey: 112
 --- !u!114 &114525175469818042
 MonoBehaviour:
   m_ObjectHideFlags: 1
