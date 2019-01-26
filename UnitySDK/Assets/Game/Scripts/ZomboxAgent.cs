@@ -8,11 +8,6 @@ using MLAgents;
 public class ZomboxAgent : Agent
 {
     /// <summary>
-    /// The ground. The bounds are used to spawn the elements.
-    /// </summary>
-	public GameObject ground;
-
-    /// <summary>
     /// The area bounds.
     /// </summary>
 	[HideInInspector]
@@ -42,10 +37,6 @@ public class ZomboxAgent : Agent
 
         // Cache the agent rigidbody
         agentRB = GetComponent<Rigidbody>();
-        // Get the ground's bounds
-        areaBounds = ground.GetComponent<Collider>().bounds;
-        // Get the ground renderer so we can change the material when a goal is scored
-        // Starting material
     }
 
     public override void CollectObservations()
@@ -58,29 +49,6 @@ public class ZomboxAgent : Agent
             AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 0f, 0f));
             AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 1.5f, 0f));
         }
-    }
-
-    /// <summary>
-    /// Use the ground's bounds to pick a random spawn position.
-    /// </summary>
-    public Vector3 GetRandomSpawnPos()
-    {
-        bool foundNewSpawnLocation = false;
-        Vector3 randomSpawnPos = Vector3.zero;
-        while (foundNewSpawnLocation == false)
-        {
-            float randomPosX = Random.Range(-areaBounds.extents.x * academy.spawnAreaMarginMultiplier,
-                                areaBounds.extents.x * academy.spawnAreaMarginMultiplier);
-
-            float randomPosZ = Random.Range(-areaBounds.extents.z * academy.spawnAreaMarginMultiplier,
-                                            areaBounds.extents.z * academy.spawnAreaMarginMultiplier);
-            randomSpawnPos = ground.transform.position + new Vector3(randomPosX, 1f, randomPosZ);
-            if (Physics.CheckBox(randomSpawnPos, new Vector3(2.5f, 0.01f, 2.5f)) == false)
-            {
-                foundNewSpawnLocation = true;
-            }
-        }
-        return randomSpawnPos;
     }
 
     /// <summary>

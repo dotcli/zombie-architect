@@ -5,11 +5,9 @@ using UnityEngine;
 public class LevelManager : MonoBehaviour {
 
 	public ZomboxAgent king;
-	public ZomboxAgent minion;
 	public GameObject block;
 	public int blockAmount = 10;
 
-	public ZomboxAgent[] agents;
 	public Transform spawnPoint;
 	// Use this for initialization
 	void Start () {
@@ -38,6 +36,12 @@ public class LevelManager : MonoBehaviour {
 		Rigidbody blockRB = block.GetComponent<Rigidbody>();
 		blockRB.velocity = Vector3.zero;
 		blockRB.angularVelocity = Vector3.zero;
-
+	}
+	public void registerGoalA() {
+		// TODO: increment score of A by 1
+		Debug.Log("A Score!");
+	}
+	public void registerGoalB() {
+		// TODO: increment score of B by 1
 	}
 }
