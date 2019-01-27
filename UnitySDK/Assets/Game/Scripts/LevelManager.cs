@@ -32,6 +32,9 @@ public class LevelManager : MonoBehaviour {
 	Vector3 getRandomSpawnLocation() {
 		return new Vector3(Random.Range(-23.0f, 23.0f), 1.0f, Random.Range(-10.0f, 10.0f));
 	}
+	Vector3 getRandomVectorSmall() {
+		return new Vector3(Random.Range(-5.0f, 5.0f), 1.0f, Random.Range(-5.0f, 5.0f));
+	}
 	public void startGame() {
 		// toggles on the canvas
 		ui.SetActive(true);
@@ -40,12 +43,12 @@ public class LevelManager : MonoBehaviour {
 	}
 	// respawns a fallen agent
 	public void respawnAgentA(GameObject agent) {
-		agent.transform.localPosition = spawnPointA.localPosition;
+		agent.transform.localPosition = spawnPointA.localPosition + getRandomVectorSmall();
 		ZomboxAgent ag = agent.GetComponent<ZomboxAgent>();
 		ag.resetVelocity();
 	}
 	public void respawnAgentB(GameObject agent) {
-		agent.transform.localPosition = spawnPointB.localPosition;
+		agent.transform.localPosition = spawnPointB.localPosition + getRandomVectorSmall();
 		ZomboxAgent ag = agent.GetComponent<ZomboxAgent>();
 		ag.resetVelocity();
 	}

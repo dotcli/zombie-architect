@@ -8,13 +8,19 @@ public class TrainingControl : MonoBehaviour {
 	bool recordExperiences;
 	bool resetBuffer;
 	Agent myAgent;
+	LevelManager _Level;
+	string tag;
+	GameObject[] matchingAgents;
 	float bufferResetTime;
 
 	public GameObject trainDisplay;
 	public Animator wipeAnimator;
 	public KeyCode recordKey = KeyCode.E;
 	public KeyCode resetKey = KeyCode.R;
-
+	public KeyCode killKey = KeyCode.Q;
+	void Awake() {
+		_Level = FindObjectOfType<LevelManager>();
+	}
 	// Use this for initialization
 	void Start () {
 		recordExperiences = false;
@@ -22,6 +28,9 @@ public class TrainingControl : MonoBehaviour {
 		myAgent = GetComponent<Agent>();
 		bufferResetTime = Time.time;
 		trainDisplay.SetActive(recordExperiences);
+
+		tag = this.gameObject.tag;
+		matchingAgents = GameObject.FindGameObjectsWithTag(tag);
 	}
 	
 	// Update is called once per frame
@@ -42,6 +51,21 @@ public class TrainingControl : MonoBehaviour {
 		else
 		{
 			resetBuffer = false;
+		}
+
+		if (Input.GetKeyDown(killKey)) {
+			// XXX: shitty code by shitty programmer
+			if (tag == "agentA") {
+				foreach (GameObject agent in matchingAgents)
+				{
+					_Level.respawnAgentA(agent);
+				}
+			} else if (tag == "agentB") {
+				foreach (GameObject agent in matchingAgents)
+				{
+					_Level.respawnAgentB(agent);
+				}
+			}
 		}
 
 		// Debug.Log("Recording experiences " + recordKey, recordExperiences.ToString());

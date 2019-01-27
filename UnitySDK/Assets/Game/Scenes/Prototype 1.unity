@@ -611,6 +611,11 @@ Prefab:
       propertyPath: wipeAnimator
       value: 
       objectReference: {fileID: 1562897448}
+    - target: {fileID: 114011135224099260, guid: 359c68a62012fb04c955ab1c7c2cefea,
+        type: 2}
+      propertyPath: killKey
+      value: 117
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 359c68a62012fb04c955ab1c7c2cefea, type: 2}
   m_IsPrefabAsset: 0
@@ -1548,7 +1553,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &716594485
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1945,13 +1950,13 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1009000883}
-  m_LocalRotation: {x: 0.5, y: 0, z: 0, w: 0.8660254}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 40, z: -20}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: 60, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &1009000885
 Animator:
   serializedVersion: 3
@@ -3074,7 +3079,9 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 801b235a8072bbe419a820b0d2870c3b, type: 2}
     - {fileID: 11400000, guid: 7ef3d6dd7dd07194eaaa6ce88813331a, type: 2}
     - {fileID: 11400000, guid: fdf8c07113ccfe145910435f16ee4d4e, type: 2}
-    _brainsToControl: []
+    _brainsToControl:
+    - {fileID: 11400000, guid: 7a8117e9f0fd8c040b513409c2abadfc, type: 2}
+    - {fileID: 11400000, guid: 7ef3d6dd7dd07194eaaa6ce88813331a, type: 2}
   maxSteps: 0
   trainingConfiguration:
     width: 1280

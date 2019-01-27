@@ -43,8 +43,8 @@ public class ZomboxAgent : Agent
     {
         if (useVectorObs)
         {
-            var rayDistance = 12f;
-            float[] rayAngles = { 0f, 45f, 90f, 135f, 180f, 110f, 70f };
+            var rayDistance = 36f;
+            float[] rayAngles = { 0f, 45f, 90f, 135f, 180f, 110f, 70f, 270f };
             var detectableObjects = detectableTags.Split(' ');
             AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 0f, 0f));
             AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 1.5f, 0f));
