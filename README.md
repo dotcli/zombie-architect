@@ -15,7 +15,7 @@ To run Zombie Architect, you need to first install and set up ml-agent. Learn mo
 ### Running the game
 
 0. Make sure ml-agent is properly set up
-1. First open [UnitySDK/Assets/Game/Scenes/Prototype 1.unity](UnitySDK/Assets/Game/Scenes/Prototype 1.unity) in Unity. We will come back to this in a bit
+1. First open `UnitySDK/Assets/Game/Scenes/Prototype 1.unity` in Unity. We will come back to this in a bit
 2. Open an Anaconda Prompt
 3. In the prompt, navigate to the root directory of this repo
 4. Activate the ml-agent environment by running `activate ml-agents`
