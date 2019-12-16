@@ -1049,6 +1049,11 @@ Prefab:
       propertyPath: wipeAnimator
       value: 
       objectReference: {fileID: 713405066}
+    - target: {fileID: 114159122798141090, guid: d143199884071c948b8f5a836cb596be,
+        type: 2}
+      propertyPath: detectableTags
+      value: block edge ground goalA goalB agentA agentB
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d143199884071c948b8f5a836cb596be, type: 2}
   m_IsPrefabAsset: 0
