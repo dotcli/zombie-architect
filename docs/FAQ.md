@@ -1,5 +1,29 @@
 # Frequently Asked Questions
 
+## Installation problems
+
+### Tensorflow dependency
+ML Agents requires TensorFlow; if you don't already have it installed, `pip` will try to install it when you install
+the ml-agents package.
+
+If you see a message like this
+```console
+ERROR: Could not find a version that satisfies the requirement tensorflow<2.0,>=1.7 (from mlagents) (from versions: none)
+ERROR: No matching distribution found for tensorflow<2.0,>=1.7 (from mlagents)
+```
+it means that there is no version of TensorFlow for your python environment. Some known potential causes are:
+ * You're using 32-bit python instead of 64-bit. See the answer [here](https://stackoverflow.com/a/1405971/224264)
+  for how to tell which you have installed.
+ * You're using python 3.8. Tensorflow plans to release packages for this as soon as possible; see
+  [this issue](https://github.com/tensorflow/tensorflow/issues/33374) for more details.
+ * You have the `tensorflow-gpu` package installed. This is equivalent to `tensorflow`, however `pip` doesn't recognize
+  this. The best way to resolve this is to update to `tensorflow==1.15.0` which provides GPU support in the same package
+  (see the [release notes](https://github.com/tensorflow/tensorflow/issues/33374) for more details.)
+ * You're on another architecture (e.g. ARM) which requires vendor provided packages.
+
+In all of these cases, the issue is a pip/python environment setup issue.  Please search the tensorflow github issues
+for similar problems and solutions before creating a new issue.
+
 ## Scripting Runtime Environment not setup correctly
 
 If you haven't switched your scripting runtime version from .NET 3.5 to .NET 4.6
@@ -12,19 +36,6 @@ error CS1061: Type `System.Text.StringBuilder' does not contain a definition for
 This is because .NET 3.5 doesn't support method Clear() for StringBuilder, refer
 to [Setting Up The ML-Agents Toolkit Within
 Unity](Installation.md#setting-up-ml-agent-within-unity) for solution.
-
-## TensorFlowSharp flag not turned on
-
-If you have already imported the TensorFlowSharp plugin, but haven't set
-ENABLE_TENSORFLOW flag for your scripting define symbols, you will see the
-following error message:
-
-```console
-UnityAgentsException: The brain 3DBallLearning was set to inference mode but the Tensorflow library is not present in the Unity project.
-```
- This error message occurs because the TensorFlowSharp plugin won't be used
-without the ENABLE_TENSORFLOW flag, refer to [Setting Up The ML-Agents Toolkit
-Within Unity](Installation.md#setting-up-ml-agent-within-unity) for solution.
 
 ## Environment Permission Error
 
@@ -57,12 +68,7 @@ UnityAgentsException: The Communicator was unable to connect. Please make sure t
 
 There may be a number of possible causes:
 
-* _Cause_: There may be no LearningBrain with `Control` option checked in the
-  `Broadcast Hub` of the Academy. In this case, the environment will not attempt
-  to communicate with python. _Solution_: Click `Add New` in your Academy's
-  `Broadcast Hub`, and drag your LearningBrain asset into the `Brains` field,
-  and check the `Control` toggle. Also you need to assign this LearningBrain
-  asset to all of the Agents you wish to do training on.
+* _Cause_: There may be no agent in the scene
 * _Cause_: On OSX, the firewall may be preventing communication with the
   environment. _Solution_: Add the built environment binary to the list of
   exceptions on the firewall by following
@@ -88,7 +94,7 @@ UnityEnvironment(file_name=filename, worker_id=X)
 
 If you receive a message `Mean reward : nan` when attempting to train a model
 using PPO, this is due to the episodes of the Learning Environment not
-terminating. In order to address this, set `Max Steps` for either the Academy or
+terminating. In order to address this, set `Max Steps` for the
 Agents within the Scene Inspector to a value greater than 0. Alternatively, it
 is possible to manually set `done` conditions for episodes from within scripts
 for custom episode-terminating events.
@@ -96,3 +102,9 @@ for custom episode-terminating events.
 ## Problems with training on AWS
 
 Please refer to [Training on Amazon Web Service FAQ](Training-on-Amazon-Web-Service.md#faq)
+
+# Known Issues
+
+## Release 0.10.0
+* ml-agents 0.10.0 and earlier were incompatible with TensorFlow 1.15.0; the graph could contain
+ an operator that `tensorflow_to_barracuda` didn't handle. This was fixed in the 0.11.0 release.

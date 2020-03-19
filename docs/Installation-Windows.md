@@ -1,4 +1,7 @@
-# Installing ML-Agents Toolkit for Windows
+# Installing ML-Agents Toolkit for Windows (Deprecated)
+
+Note: We no longer use this guide ourselves and so it may not work correctly. We've decided to
+ keep it up just in case it is helpful to you.
 
 The ML-Agents toolkit supports Windows 10. While it might be possible to run the
 ML-Agents toolkit using other versions of Windows, it has not been tested on
@@ -7,7 +10,7 @@ Windows VM such as Bootcamp or Parallels.
 
 To use the ML-Agents toolkit, you install Python and the required Python
 packages as outlined below. This guide also covers how set up GPU-based training
-(for advanced users). GPU-based training is not currently required for the 
+(for advanced users). GPU-based training is not currently required for the
 ML-Agents toolkit. However, training on a GPU might be required by future
 versions and features.
 
@@ -15,7 +18,7 @@ versions and features.
 
 [Download](https://www.anaconda.com/download/#windows) and install Anaconda for
 Windows. By using Anaconda, you can manage separate environments for different
-distributions of Python. Python 3.5 or 3.6 is required as we no longer support
+distributions of Python. Python 3.6.1 or higher is required as we no longer support
 Python 2. In this guide, we are using Python version 3.6 and Anaconda version
 5.1
 ([64-bit](https://repo.continuum.io/archive/Anaconda3-5.1.0-Windows-x86_64.exe)
@@ -81,7 +84,7 @@ conda create -n ml-agents python=3.6
 ```
 
 You may be asked to install new packages. Type `y` and press enter _(make sure
-you are connected to the internet)_. You must install these required packages.
+you are connected to the Internet)_. You must install these required packages.
 The new Conda environment is called ml-agents and uses Python version 3.6.
 
 <p align="center">
@@ -102,7 +105,7 @@ Next, install `tensorflow`. Install this package using `pip` - which is a
 package management system used to install Python packages. Latest versions of
 TensorFlow won't work, so you will need to make sure that you install version
 1.7.1. In the same Anaconda Prompt, type in the following command _(make sure
-you are connected to the internet)_:
+you are connected to the Internet)_:
 
 ```sh
 pip install tensorflow==1.7.1
@@ -120,38 +123,74 @@ an Anaconda Prompt _(if you open a new prompt, be sure to activate the ml-agents
 Conda environment by typing `activate ml-agents`)_:
 
 ```sh
-git clone https://github.com/Unity-Technologies/ml-agents.git
+git clone --branch latest_release https://github.com/Unity-Technologies/ml-agents.git
 ```
+The `--branch latest_release` option will switch to the tag of the latest stable release.
+Omitting that will get the `master` branch which is potentially unstable.
 
 If you don't want to use Git, you can always directly download all the files
-[here](https://github.com/Unity-Technologies/ml-agents/archive/master.zip).
+[here](https://github.com/Unity-Technologies/ml-agents/archive/latest_release.zip).
 
-The `UnitySDK` subdirectory contains the Unity Assets to add to your projects.
-It also contains many [example environments](Learning-Environment-Examples.md)
+The `com.unity.ml-agents` subdirectory contains the core code to add to your projects.
+The `Project` subdirectory contains many [example environments](Learning-Environment-Examples.md)
 to help you get started.
 
-The `ml-agents` subdirectory contains Python packages which provide
-trainers and a Python API to interface with Unity.
+The `ml-agents` subdirectory contains a Python package which provides deep reinforcement
+learning trainers to use with Unity environments.
+
+The `ml-agents-envs` subdirectory contains a Python API to interface with Unity, which
+the `ml-agents` package depends on.
 
 The `gym-unity` subdirectory contains a package to interface with OpenAI Gym.
+
+Keep in mind where the files were downloaded, as you will need the
+trainer config files in this directory when running `mlagents-learn`.
+Make sure you are connected to the Internet and then type in the Anaconda
+Prompt:
+
+```console
+pip install mlagents
+```
+
+This will complete the installation of all the required Python packages to run
+the ML-Agents toolkit.
+
+Sometimes on Windows, when you use pip to install certain Python packages, the pip will get stuck when trying to read the cache of the package. If you see this, you can try:
+
+```console
+pip install mlagents --no-cache-dir
+```
+
+This `--no-cache-dir` tells the pip to disable the cache.
+
+### Installing for Development
+
+If you intend to make modifications to `ml-agents` or `ml-agents-envs`, you should install
+the packages from the cloned repo rather than from PyPi. To do this, you will need to install
+ `ml-agents` and `ml-agents-envs` separately.
 
 In our example, the files are located in `C:\Downloads`. After you have either
 cloned or downloaded the files, from the Anaconda Prompt, change to the ml-agents
 subdirectory inside the ml-agents directory:
 
 ```console
-cd C:\Downloads\ml-agents\ml-agents
+cd C:\Downloads\ml-agents
 ```
 
-Make sure you are connected to the internet and then type in the Anaconda
-Prompt within `ml-agents` subdirectory:
+From the repo's main directory, now run:
 
-```sh
+```console
+cd ml-agents-envs
+pip install -e .
+cd ..
+cd ml-agents
 pip install -e .
 ```
 
-This will complete the installation of all the required Python packages to run
-the ML-Agents toolkit.
+Running pip with the `-e` flag will let you make changes to the Python files directly and have those
+reflected when you run `mlagents-learn`. It is important to install these packages in this order as the
+`mlagents` package depends on `mlagents_envs`, and installing it in the other
+order will download `mlagents_envs` from PyPi.
 
 ## (Optional) Step 4: GPU Training using The ML-Agents Toolkit
 
@@ -279,7 +318,7 @@ installed. _Please note that case sensitivity matters_.
 Next, install `tensorflow-gpu` using `pip`. You'll need version 1.7.1. In an
 Anaconda Prompt with the Conda environment ml-agents activated, type in the
 following command to uninstall TensorFlow for cpu and install TensorFlow
-for gpu _(make sure you are connected to the internet)_:
+for gpu _(make sure you are connected to the Internet)_:
 
 ```sh
 pip uninstall tensorflow
@@ -287,8 +326,14 @@ pip install tensorflow-gpu==1.7.1
 ```
 
 Lastly, you should test to see if everything installed properly and that
-TensorFlow can identify your GPU. In the same Anaconda Prompt, type in the
-following command:
+TensorFlow can identify your GPU. In the same Anaconda Prompt, open Python
+in the Prompt by calling:
+
+```sh
+python
+```
+
+And then type the following commands:
 
 ```python
 import tensorflow as tf
@@ -302,7 +347,7 @@ You should see something similar to:
 Found device 0 with properties ...
 ```
 
-## Acknowledgements
+## Acknowledgments
 
 We would like to thank
 [Jason Weimann](https://unity3d.college/2017/10/25/machine-learning-in-unity3d-setting-up-the-environment-tensorflow-for-agentml-on-windows-10/)

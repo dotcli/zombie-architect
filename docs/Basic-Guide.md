@@ -11,12 +11,12 @@ the basic concepts of Unity.
 ## Setting up the ML-Agents Toolkit within Unity
 
 In order to use the ML-Agents toolkit within Unity, you first need to change a few
-Unity settings. 
+Unity settings.
 
 1. Launch Unity
 2. On the Projects dialog, choose the **Open** option at the top of the window.
-3. Using the file dialog that opens, locate the `UnitySDK` folder
-   within the the ML-Agents toolkit project and click **Open**.
+3. Using the file dialog that opens, locate the `Project` folder
+   within the ML-Agents toolkit project and click **Open**.
 4. Go to **Edit** > **Project Settings** > **Player**
 5. For **each** of the platforms you target (**PC, Mac and Linux Standalone**,
    **iOS** or **Android**):
@@ -25,64 +25,40 @@ Unity settings.
        Equivalent or .NET 4.x Equivalent)**
 6. Go to **File** > **Save Project**
 
-## Setting up TensorFlowSharp
-
-We provide pre-trained models (`.bytes` files) for all the agents 
-in all our demo environments. To be able to run those models, you'll 
-first need to set-up TensorFlowSharp support. Consequently, you need to install 
-the TensorFlowSharp plugin to be able to run these models within the Unity 
-Editor. 
-
-1. Download the [TensorFlowSharp Plugin](https://s3.amazonaws.com/unity-ml-agents/0.5/TFSharpPlugin.unitypackage)
-2. Import it into Unity by double clicking the downloaded file. You can check 
-if it was successfully imported by checking the
-TensorFlow files in the Project window under **Assets** > **ML-Agents** >
-**Plugins** > **Computer**.
-3. Go to **Edit** > **Project Settings** > **Player** and add `ENABLE_TENSORFLOW`
-to the `Scripting Define Symbols` for each type of device you want to use 
-(**`PC, Mac and Linux Standalone`**, **`iOS`** or **`Android`**).
-
-   ![Project Settings](images/project-settings.png)
-
-   **Note**: If you don't see anything under **Assets**, drag the
-   `UnitySDK/Assets/ML-Agents` folder under **Assets** within Project window.
-
-   ![Imported TensorFlowsharp](images/imported-tensorflowsharp.png)
-
 ## Running a Pre-trained Model
-We've included pre-trained models for the 3D Ball example.
+
+We include pre-trained models for our agents (`.nn` files) and we use the
+[Unity Inference Engine](Unity-Inference-Engine.md) to run these models
+inside Unity. In this section, we will use the pre-trained model for the
+3D Ball example.
 
 1. In the **Project** window, go to the `Assets/ML-Agents/Examples/3DBall/Scenes` folder
    and open the `3DBall` scene file.
-2. In the **Project** window, go to the `Assets/ML-Agents/Examples/3DBall/Prefabs` folder. 
-   Expand `Game` and click on the `Platform` prefab.  You should see the `Platform` prefab in the **Inspector** window.
-   
-   **Note**: The platforms in the `3DBall` scene were created using the `Platform` prefab.  Instead of updating all 12 platforms individually, you can update the `Platform` prefab instead.
-   
-   ![Platform Prefab](images/platform_prefab.png)
-   
-3. In the **Project** window, drag the **3DBallLearning** Brain located in 
-   `Assets/ML-Agents/Examples/3DBall/Brains` into the `Brain` property under `Ball 3D Agent (Script)` component in the **Inspector** window.
-   
-   ![3dball learning brain](images/3dball_learning_brain.png)
-   
-4. You should notice that each `Platform` under each `Game` in the **Hierarchy** windows now contains **3DBallLearning** as `Brain`. __Note__ : You can modify multiple game objects in a scene by selecting them all at 
-   once using the search bar in the Scene Hierarchy. 
-5. In the **Project** window, click on the **3DBallLearning** Brain located in 
-   `Assets/ML-Agents/Examples/3DBall/Brains`.  You should see the properties in the **Inspector** window.
-6. In the **Project** window, open the `Assets/ML-Agents/Examples/3DBall/TFModels` 
-   folder.
-7. Drag the `3DBallLearning` model file from the `Assets/ML-Agents/Examples/3DBall/TFModels` 
-   folder to the **Model** field of the **3DBallLearning** Brain in the **Inspector** window. __Note__ : All of the brains should now have `3DBallLearning` as the TensorFlow model in the `Model` property 
-8. Click the **Play** button and you will see the platforms balance the balls
-   using the pretrained model.
+2. In the **Project** window, go to the `Assets/ML-Agents/Examples/3DBall/Prefabs` folder.
+   Expand `3DBall` and click on the `Agent` prefab.  You should see the `Agent` prefab in the **Inspector** window.
 
-   ![Running a pretrained model](images/running-a-pretrained-model.gif)
+   **Note**: The platforms in the `3DBall` scene were created using the `3DBall` prefab.  Instead of updating all 12 platforms individually, you can update the `3DBall` prefab instead.
+
+   ![Platform Prefab](images/platform_prefab.png)
+
+3. In the **Project** window, drag the **3DBall** Model located in
+   `Assets/ML-Agents/Examples/3DBall/TFModels` into the `Model` property under `Behavior Parameters (Script)` component in the Agent GameObject **Inspector** window.
+
+   ![3dball learning brain](images/3dball_learning_brain.png)
+
+4. You should notice that each `Agent` under each `3DBall` in the **Hierarchy** windows now contains **3DBall** as `Model` on the `Behavior Parameters`. __Note__ : You can modify multiple game objects in a scene by selecting them all at
+   once using the search bar in the Scene Hierarchy.
+8. Select the **InferenceDevice** to use for this model (CPU or GPU) on the Agent.
+   _Note: CPU is faster for the majority of ML-Agents toolkit generated models_
+9. Click the **Play** button and you will see the platforms balance the balls
+   using the pre-trained model.
+
+   ![Running a pre-trained model](images/balance.png)
 
 ## Using the Basics Jupyter Notebook
 
 The `notebooks/getting-started.ipynb` [Jupyter notebook](Background-Jupyter.md)
-contains a simple walkthrough of the functionality of the Python API. It can
+contains a simple walk-through of the functionality of the Python API. It can
 also serve as a simple test that your environment is configured correctly.
 Within `Basics`, be sure to set `env_name` to the name of the Unity executable
 if you want to [use an executable](Learning-Environment-Executable.md) or to
@@ -91,28 +67,19 @@ if you want to [use an executable](Learning-Environment-Executable.md) or to
 More information and documentation is provided in the
 [Python API](Python-API.md) page.
 
-## Training the Brain with Reinforcement Learning
+## Training the Model with Reinforcement Learning
 
-### Setting up the enviornment for training
+### Setting up the environment for training
 
-To set up the environment for training, you will need to specify which agents are contributing
-to the training and which Brain is being trained. You can only perform training with
-a `Learning Brain`.
-
-1. Each platform agent needs an assigned `Learning Brain`.  In this example, each platform agent was created using a prefab.  To update all of the brains in each platform agent at once, you only need to update the platform agent prefab.  In the **Project** window, go to the `Assets/ML-Agents/Examples/3DBall/Prefabs` folder. Expand `Game` and click on the `Platform` prefab.  You should see the `Platform` prefab in the **Inspector** window.  In the **Project** window, drag the **3DBallLearning** Brain located in  `Assets/ML-Agents/Examples/3DBall/Brains` into the `Brain` property under `Ball 3D Agent (Script)` component in the **Inspector** window.  
-
-   **Note**: The Unity prefab system will modify all instances of the agent properties in your scene.  If the agent does not synchronize automatically with the prefab, you can hit the Revert button in the top of the **Inspector** window.
-
-2. In the **Hierarchy** window, select `Ball3DAcademy`.
-3. In the **Project** window, go to `Assets/ML-Agents/Examples/3DBall/Brains` folder and drag the **3DBallLearning** Brain to the `Brains` property under `Braodcast Hub` in the `Ball3DAcademy` object in the **Inspector** window.  In order to train, make sure the `Control` checkbox is selected.
-
-   **Note:** Assigning a Brain to an agent (dragging a Brain into the `Brain` property of 
-the agent) means that the Brain will be making decision for that agent. Whereas dragging
-a Brain into the Broadcast Hub means that the Brain will be exposed to the Python process.
-The `Control` checkbox means that in addition to being exposed to Python, the Brain will
-be controlled by the Python process (required for training).
-
-   ![Set Brain to External](images/mlagents-SetBrainToTrain.png)
+In order to setup the Agents for Training, you will need to edit the
+`Behavior Name` under `BehaviorParamters` in the Agent Inspector window.
+The `Behavior Name` is used to group agents per behaviors. Note that Agents
+sharing the same `Behavior Name` must be agents of the same type using the
+same `Behavior Parameters`. You can make sure all your agents have the same
+`Behavior Parameters` using Prefabs.
+The `Behavior Name` corresponds to the name of the model that will be
+generated by the training process and is used to select the hyperparameters
+from the training configuration file.
 
 ### Training the environment
 
@@ -144,43 +111,6 @@ perform training. Please refer to [this
 page](Learning-Environment-Executable.md) for instructions on how to build and
 use an executable.
 
-```console
-ml-agents$ mlagents-learn config/trainer_config.yaml --run-id=first-run --train
-
-
-                        ▄▄▄▓▓▓▓
-                   ╓▓▓▓▓▓▓█▓▓▓▓▓
-              ,▄▄▄m▀▀▀'  ,▓▓▓▀▓▓▄                           ▓▓▓  ▓▓▌
-            ▄▓▓▓▀'      ▄▓▓▀  ▓▓▓      ▄▄     ▄▄ ,▄▄ ▄▄▄▄   ,▄▄ ▄▓▓▌▄ ▄▄▄    ,▄▄
-          ▄▓▓▓▀        ▄▓▓▀   ▐▓▓▌     ▓▓▌   ▐▓▓ ▐▓▓▓▀▀▀▓▓▌ ▓▓▓ ▀▓▓▌▀ ^▓▓▌  ╒▓▓▌
-        ▄▓▓▓▓▓▄▄▄▄▄▄▄▄▓▓▓      ▓▀      ▓▓▌   ▐▓▓ ▐▓▓    ▓▓▓ ▓▓▓  ▓▓▌   ▐▓▓▄ ▓▓▌
-        ▀▓▓▓▓▀▀▀▀▀▀▀▀▀▀▓▓▄     ▓▓      ▓▓▌   ▐▓▓ ▐▓▓    ▓▓▓ ▓▓▓  ▓▓▌    ▐▓▓▐▓▓
-          ^█▓▓▓        ▀▓▓▄   ▐▓▓▌     ▓▓▓▓▄▓▓▓▓ ▐▓▓    ▓▓▓ ▓▓▓  ▓▓▓▄    ▓▓▓▓`
-            '▀▓▓▓▄      ^▓▓▓  ▓▓▓       └▀▀▀▀ ▀▀ ^▀▀    `▀▀ `▀▀   '▀▀    ▐▓▓▌
-               ▀▀▀▀▓▄▄▄   ▓▓▓▓▓▓,                                      ▓▓▓▓▀
-                   `▀█▓▓▓▓▓▓▓▓▓▌
-                        ¬`▀▀▀█▓
-
-
-INFO:mlagents.learn:{'--curriculum': 'None',
- '--docker-target-name': 'Empty',
- '--env': 'None',
- '--help': False,
- '--keep-checkpoints': '5',
- '--lesson': '0',
- '--load': False,
- '--no-graphics': False,
- '--num-runs': '1',
- '--run-id': 'first-run',
- '--save-freq': '50000',
- '--seed': '-1',
- '--slow': False,
- '--train': True,
- '--worker-id': '0',
- '<trainer-config-path>': 'config/trainer_config.yaml'}
-INFO:mlagents.envs:Start training by pressing the Play button in the Unity Editor.
- ```
-
 **Note**: If you're using Anaconda, don't forget to activate the ml-agents
 environment first.
 
@@ -188,13 +118,11 @@ If `mlagents-learn` runs correctly and starts training, you should see something
 like this:
 
 ```console
-INFO:mlagents.envs:
+INFO:mlagents_envs:
 'Ball3DAcademy' started successfully!
 Unity Academy name: Ball3DAcademy
-        Number of Brains: 1
-        Number of Training Brains : 1
-        Reset Parameters :
 
+INFO:mlagents_envs:Connected new brain:
 Unity brain name: 3DBallLearning
         Number of Visual Observations (per agent): 0
         Vector Observation space size (per agent): 8
@@ -202,7 +130,7 @@ Unity brain name: 3DBallLearning
         Vector Action space type: continuous
         Vector Action space size (per agent): [2]
         Vector Action descriptions: ,
-INFO:mlagents.envs:Hyperparameters for the PPO Trainer of brain 3DBallLearning:
+INFO:mlagents_envs:Hyperparameters for the PPO Trainer of brain 3DBallLearning:
         batch_size:          64
         beta:                0.001
         buffer_size:         12000
@@ -240,24 +168,24 @@ INFO:mlagents.trainers: first-run-0: 3DBallLearning: Step: 10000. Mean Reward: 2
 ### After training
 
 You can press Ctrl+C to stop the training, and your trained model will be at
-`models/<run-identifier>/<brain_name>.bytes` where
-`<brain_name>` is the name of the Brain corresponding to the model.
+`models/<run-identifier>/<behavior_name>.nn` where
+`<behavior_name>` is the name of the `Behavior Name` of the agents corresponding to the model.
 (**Note:** There is a known bug on Windows that causes the saving of the model to
 fail when you early terminate the training, it's recommended to wait until Step
 has reached the max_steps parameter you set in trainer_config.yaml.) This file
 corresponds to your model's latest checkpoint. You can now embed this trained
-model into your Learning Brain by following the steps below, which is similar to
+model into your Agents by following the steps below, which is similar to
 the steps described
-[above](#play-an-example-environment-using-pretrained-model).
+[above](#running-a-pre-trained-model).
 
 1. Move your model file into
-   `UnitySDK/Assets/ML-Agents/Examples/3DBall/TFModels/`.
+   `Project/Assets/ML-Agents/Examples/3DBall/TFModels/`.
 2. Open the Unity Editor, and select the **3DBall** scene as described above.
-3. Select the  **3DBallLearning** Learning Brain from the Scene hierarchy.
-5. Drag the `<brain_name>.bytes` file from the Project window of
-   the Editor to the **Model** placeholder in the **3DBallLearning**
+3. Select the  **3DBall** prefab Agent object.
+4. Drag the `<behavior_name>.nn` file from the Project window of
+   the Editor to the **Model** placeholder in the **Ball3DAgent**
    inspector window.
-6. Press the :arrow_forward: button at the top of the Editor.
+5. Press the :arrow_forward: button at the top of the Editor.
 
 ## Next Steps
 
@@ -269,6 +197,6 @@ the steps described
 - For a "Hello World" introduction to creating your own Learning Environment,
   check out the [Making a New Learning
   Environment](Learning-Environment-Create-New.md) page.
-- For a series of Youtube video tutorials, checkout the
+- For a series of YouTube video tutorials, checkout the
   [Machine Learning Agents PlayList](https://www.youtube.com/playlist?list=PLX2vGYjWbI0R08eWQkO7nQkGiicHAX7IX)
   page.

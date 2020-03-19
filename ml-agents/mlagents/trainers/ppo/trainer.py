@@ -1,357 +1,275 @@
 # # Unity ML-Agents Toolkit
 # ## ML-Agent Learning (PPO)
-# Contains an implementation of PPO as described (https://arxiv.org/abs/1707.06347).
+# Contains an implementation of PPO as described in: https://arxiv.org/abs/1707.06347
 
 import logging
-import os
-from collections import deque
+from collections import defaultdict
 
 import numpy as np
-import tensorflow as tf
 
-from mlagents.envs import AllBrainInfo, BrainInfo
-from mlagents.trainers.buffer import Buffer
 from mlagents.trainers.ppo.policy import PPOPolicy
-from mlagents.trainers.trainer import Trainer
+from mlagents.trainers.ppo.multi_gpu_policy import MultiGpuPPOPolicy, get_devices
+from mlagents.trainers.rl_trainer import RLTrainer
+from mlagents.trainers.brain import BrainParameters
+from mlagents.trainers.tf_policy import TFPolicy
+from mlagents.trainers.trajectory import Trajectory
 
 logger = logging.getLogger("mlagents.trainers")
 
 
-class PPOTrainer(Trainer):
+class PPOTrainer(RLTrainer):
     """The PPOTrainer is an implementation of the PPO algorithm."""
 
-    def __init__(self, brain, reward_buff_cap, trainer_parameters, training, load, seed, run_id):
+    def __init__(
+        self,
+        brain_name: str,
+        reward_buff_cap: int,
+        trainer_parameters: dict,
+        training: bool,
+        load: bool,
+        seed: int,
+        run_id: str,
+        multi_gpu: bool,
+    ):
         """
         Responsible for collecting experiences and training PPO model.
+        :param brain_name: The name of the brain associated with trainer config
+        :param reward_buff_cap: Max reward history to track in the reward buffer
         :param trainer_parameters: The parameters for the trainer (dictionary).
         :param training: Whether the trainer is set for training.
         :param load: Whether the model should be loaded.
         :param seed: The seed the model will be initialized with
-        :param run_id: The The identifier of the current run
+        :param run_id: The identifier of the current run
+        :param multi_gpu: Boolean for multi-gpu policy model
         """
-        super(PPOTrainer, self).__init__(brain, trainer_parameters, training, run_id)
-        self.param_keys = ['batch_size', 'beta', 'buffer_size', 'epsilon', 'gamma', 'hidden_units', 'lambd',
-                           'learning_rate', 'max_steps', 'normalize', 'num_epoch', 'num_layers',
-                           'time_horizon', 'sequence_length', 'summary_freq', 'use_recurrent',
-                           'summary_path', 'memory_size', 'use_curiosity', 'curiosity_strength',
-                           'curiosity_enc_size', 'model_path']
+        super(PPOTrainer, self).__init__(
+            brain_name, trainer_parameters, training, run_id, reward_buff_cap
+        )
+        self.param_keys = [
+            "batch_size",
+            "beta",
+            "buffer_size",
+            "epsilon",
+            "hidden_units",
+            "lambd",
+            "learning_rate",
+            "max_steps",
+            "normalize",
+            "num_epoch",
+            "num_layers",
+            "time_horizon",
+            "sequence_length",
+            "summary_freq",
+            "use_recurrent",
+            "summary_path",
+            "memory_size",
+            "model_path",
+            "reward_signals",
+        ]
+        self._check_param_keys()
+        self.load = load
+        self.multi_gpu = multi_gpu
+        self.seed = seed
+        self.policy: PPOPolicy = None  # type: ignore
 
-        self.check_param_keys()
-        self.use_curiosity = bool(trainer_parameters['use_curiosity'])
-        self.step = 0
-        self.policy = PPOPolicy(seed, brain, trainer_parameters,
-                                self.is_training, load)
-
-        stats = {'Environment/Cumulative Reward': [], 'Environment/Episode Length': [],
-                 'Policy/Value Estimate': [], 'Policy/Entropy': [], 'Losses/Value Loss': [],
-                 'Losses/Policy Loss': [], 'Policy/Learning Rate': []}
-        if self.use_curiosity:
-            stats['Losses/Forward Loss'] = []
-            stats['Losses/Inverse Loss'] = []
-            stats['Policy/Curiosity Reward'] = []
-            self.intrinsic_rewards = {}
-        self.stats = stats
-
-        self.training_buffer = Buffer()
-        self.cumulative_rewards = {}
-        self._reward_buffer = deque(maxlen=reward_buff_cap)
-        self.episode_steps = {}
-        self.summary_path = trainer_parameters['summary_path']
-        if not os.path.exists(self.summary_path):
-            os.makedirs(self.summary_path)
-
-        self.summary_writer = tf.summary.FileWriter(self.summary_path)
-
-    def __str__(self):
-        return '''Hyperparameters for the PPO Trainer of brain {0}: \n{1}'''.format(
-            self.brain_name, '\n'.join(['\t{0}:\t{1}'.format(x, self.trainer_parameters[x]) for x in self.param_keys]))
-
-    @property
-    def parameters(self):
+    def _process_trajectory(self, trajectory: Trajectory) -> None:
         """
-        Returns the trainer parameters of the trainer.
-        """
-        return self.trainer_parameters
-
-    @property
-    def get_max_steps(self):
-        """
-        Returns the maximum number of steps. Is used to know when the trainer should be stopped.
-        :return: The maximum number of steps of the trainer
-        """
-        return float(self.trainer_parameters['max_steps'])
-
-    @property
-    def get_step(self):
-        """
-        Returns the number of steps the trainer has performed
-        :return: the step count of the trainer
-        """
-        return self.step
-
-    @property
-    def reward_buffer(self):
-        """
-        Returns the reward buffer. The reward buffer contains the cumulative
-        rewards of the most recent episodes completed by agents using this
-        trainer.
-        :return: the reward buffer.
-        """
-        return self._reward_buffer
-
-    def increment_step_and_update_last_reward(self):
-        """
-        Increment the step count of the trainer and Updates the last reward
-        """
-        if len(self.stats['Environment/Cumulative Reward']) > 0:
-            mean_reward = np.mean(self.stats['Environment/Cumulative Reward'])
-            self.policy.update_reward(mean_reward)
-        self.policy.increment_step()
-        self.step = self.policy.get_current_step()
-
-    def take_action(self, all_brain_info: AllBrainInfo):
-        """
-        Decides actions given observations information, and takes them in environment.
-        :param all_brain_info: A dictionary of brain names and BrainInfo from environment.
-        :return: a tuple containing action, memories, values and an object
-        to be passed to add experiences
-        """
-        curr_brain_info = all_brain_info[self.brain_name]
-        if len(curr_brain_info.agents) == 0:
-            return [], [], [], None, None
-
-        run_out = self.policy.evaluate(curr_brain_info)
-        self.stats['Policy/Value Estimate'].append(run_out['value'].mean())
-        self.stats['Policy/Entropy'].append(run_out['entropy'].mean())
-        self.stats['Policy/Learning Rate'].append(run_out['learning_rate'])
-        if self.policy.use_recurrent:
-            return run_out['action'], run_out['memory_out'], None, \
-                   run_out['value'], run_out
-        else:
-            return run_out['action'], None, None, run_out['value'], run_out
-
-    def construct_curr_info(self, next_info: BrainInfo) -> BrainInfo:
-        """
-        Constructs a BrainInfo which contains the most recent previous experiences for all agents info
-        which correspond to the agents in a provided next_info.
-        :BrainInfo next_info: A t+1 BrainInfo.
-        :return: curr_info: Reconstructed BrainInfo to match agents of next_info.
-        """
-        visual_observations = [[]]
-        vector_observations = []
-        text_observations = []
-        memories = []
-        rewards = []
-        local_dones = []
-        max_reacheds = []
-        agents = []
-        prev_vector_actions = []
-        prev_text_actions = []
-        for agent_id in next_info.agents:
-            agent_brain_info = self.training_buffer[agent_id].last_brain_info
-            if agent_brain_info is None:
-                agent_brain_info = next_info
-            agent_index = agent_brain_info.agents.index(agent_id)
-            for i in range(len(next_info.visual_observations)):
-                visual_observations[i].append(agent_brain_info.visual_observations[i][agent_index])
-            vector_observations.append(agent_brain_info.vector_observations[agent_index])
-            text_observations.append(agent_brain_info.text_observations[agent_index])
-            if self.policy.use_recurrent:
-                if len(agent_brain_info.memories > 0):
-                    memories.append(agent_brain_info.memories[agent_index])
-                else:
-                    memories.append(self.policy.make_empty_memory(1))
-            rewards.append(agent_brain_info.rewards[agent_index])
-            local_dones.append(agent_brain_info.local_done[agent_index])
-            max_reacheds.append(agent_brain_info.max_reached[agent_index])
-            agents.append(agent_brain_info.agents[agent_index])
-            prev_vector_actions.append(agent_brain_info.previous_vector_actions[agent_index])
-            prev_text_actions.append(agent_brain_info.previous_text_actions[agent_index])
-        if self.policy.use_recurrent:
-            memories = np.vstack(memories)
-        curr_info = BrainInfo(visual_observations, vector_observations, text_observations,
-                              memories, rewards, agents, local_dones, prev_vector_actions,
-                              prev_text_actions, max_reacheds)
-        return curr_info
-
-    def add_experiences(self, curr_all_info: AllBrainInfo, next_all_info: AllBrainInfo, take_action_outputs):
-        """
-        Adds experiences to each agent's experience history.
-        :param curr_all_info: Dictionary of all current brains and corresponding BrainInfo.
-        :param next_all_info: Dictionary of all current brains and corresponding BrainInfo.
-        :param take_action_outputs: The outputs of the take action method.
-        """
-        curr_info = curr_all_info[self.brain_name]
-        next_info = next_all_info[self.brain_name]
-
-        for agent_id in curr_info.agents:
-            self.training_buffer[agent_id].last_brain_info = curr_info
-            self.training_buffer[agent_id].last_take_action_outputs = take_action_outputs
-
-        if curr_info.agents != next_info.agents:
-            curr_to_use = self.construct_curr_info(next_info)
-        else:
-            curr_to_use = curr_info
-
-        intrinsic_rewards = self.policy.get_intrinsic_rewards(curr_to_use, next_info)
-
-        for agent_id in next_info.agents:
-            stored_info = self.training_buffer[agent_id].last_brain_info
-            stored_take_action_outputs = self.training_buffer[agent_id].last_take_action_outputs
-            if stored_info is not None:
-                idx = stored_info.agents.index(agent_id)
-                next_idx = next_info.agents.index(agent_id)
-                if not stored_info.local_done[idx]:
-                    for i, _ in enumerate(stored_info.visual_observations):
-                        self.training_buffer[agent_id]['visual_obs%d' % i].append(
-                            stored_info.visual_observations[i][idx])
-                        self.training_buffer[agent_id]['next_visual_obs%d' % i].append(
-                            next_info.visual_observations[i][next_idx])
-                    if self.policy.use_vec_obs:
-                        self.training_buffer[agent_id]['vector_obs'].append(stored_info.vector_observations[idx])
-                        self.training_buffer[agent_id]['next_vector_in'].append(
-                            next_info.vector_observations[next_idx])
-                    if self.policy.use_recurrent:
-                        if stored_info.memories.shape[1] == 0:
-                            stored_info.memories = np.zeros((len(stored_info.agents), self.policy.m_size))
-                        self.training_buffer[agent_id]['memory'].append(stored_info.memories[idx])
-                    actions = stored_take_action_outputs['action']
-                    if self.policy.use_continuous_act:
-                        actions_pre = stored_take_action_outputs['pre_action']
-                        self.training_buffer[agent_id]['actions_pre'].append(actions_pre[idx])
-                        epsilons = stored_take_action_outputs['random_normal_epsilon']
-                        self.training_buffer[agent_id]['random_normal_epsilon'].append(
-                            epsilons[idx])
-                    else:
-                        self.training_buffer[agent_id]['action_mask'].append(
-                            stored_info.action_masks[idx], padding_value=1)
-                    a_dist = stored_take_action_outputs['log_probs']
-                    value = stored_take_action_outputs['value']
-                    self.training_buffer[agent_id]['actions'].append(actions[idx])
-                    self.training_buffer[agent_id]['prev_action'].append(stored_info.previous_vector_actions[idx])
-                    self.training_buffer[agent_id]['masks'].append(1.0)
-                    if self.use_curiosity:
-                        self.training_buffer[agent_id]['rewards'].append(next_info.rewards[next_idx] +
-                                                                         intrinsic_rewards[next_idx])
-                    else:
-                        self.training_buffer[agent_id]['rewards'].append(next_info.rewards[next_idx])
-                    self.training_buffer[agent_id]['action_probs'].append(a_dist[idx])
-                    self.training_buffer[agent_id]['value_estimates'].append(value[idx][0])
-                    if agent_id not in self.cumulative_rewards:
-                        self.cumulative_rewards[agent_id] = 0
-                    self.cumulative_rewards[agent_id] += next_info.rewards[next_idx]
-                    if self.use_curiosity:
-                        if agent_id not in self.intrinsic_rewards:
-                            self.intrinsic_rewards[agent_id] = 0
-                        self.intrinsic_rewards[agent_id] += intrinsic_rewards[next_idx]
-                if not next_info.local_done[next_idx]:
-                    if agent_id not in self.episode_steps:
-                        self.episode_steps[agent_id] = 0
-                    self.episode_steps[agent_id] += 1
-
-    def process_experiences(self, current_info: AllBrainInfo, new_info: AllBrainInfo):
-        """
-        Checks agent histories for processing condition, and processes them as necessary.
+        Takes a trajectory and processes it, putting it into the update buffer.
         Processing involves calculating value and advantage targets for model updating step.
-        :param current_info: Dictionary of all current brains and corresponding BrainInfo.
-        :param new_info: Dictionary of all next brains and corresponding BrainInfo.
+        :param trajectory: The Trajectory tuple containing the steps to be processed.
         """
+        super()._process_trajectory(trajectory)
+        agent_id = trajectory.agent_id  # All the agents should have the same ID
 
-        info = new_info[self.brain_name]
-        for l in range(len(info.agents)):
-            agent_actions = self.training_buffer[info.agents[l]]['actions']
-            if ((info.local_done[l] or len(agent_actions) > self.trainer_parameters['time_horizon'])
-                    and len(agent_actions) > 0):
-                agent_id = info.agents[l]
-                if info.local_done[l] and not info.max_reached[l]:
-                    value_next = 0.0
-                else:
-                    if info.max_reached[l]:
-                        bootstrapping_info = self.training_buffer[agent_id].last_brain_info
-                        idx = bootstrapping_info.agents.index(agent_id)
-                    else:
-                        bootstrapping_info = info
-                        idx = l
-                    value_next = self.policy.get_value_estimate(bootstrapping_info, idx)
+        # Add to episode_steps
+        self.episode_steps[agent_id] += len(trajectory.steps)
 
-                self.training_buffer[agent_id]['advantages'].set(
-                    get_gae(
-                        rewards=self.training_buffer[agent_id]['rewards'].get_batch(),
-                        value_estimates=self.training_buffer[agent_id]['value_estimates'].get_batch(),
-                        value_next=value_next,
-                        gamma=self.trainer_parameters['gamma'],
-                        lambd=self.trainer_parameters['lambd']))
-                self.training_buffer[agent_id]['discounted_returns'].set(
-                    self.training_buffer[agent_id]['advantages'].get_batch()
-                    + self.training_buffer[agent_id]['value_estimates'].get_batch())
+        agent_buffer_trajectory = trajectory.to_agentbuffer()
+        # Update the normalization
+        if self.is_training:
+            self.policy.update_normalization(agent_buffer_trajectory["vector_obs"])
 
-                self.training_buffer.append_update_buffer(agent_id, batch_size=None,
-                                                          training_length=self.policy.sequence_length)
+        # Get all value estimates
+        value_estimates = self.policy.get_batched_value_estimates(
+            agent_buffer_trajectory
+        )
+        for name, v in value_estimates.items():
+            agent_buffer_trajectory["{}_value_estimates".format(name)].extend(v)
+            self.stats_reporter.add_stat(
+                self.policy.reward_signals[name].value_name, np.mean(v)
+            )
 
-                self.training_buffer[agent_id].reset_agent()
-                if info.local_done[l]:
-                    self.stats['Environment/Cumulative Reward'].append(
-                        self.cumulative_rewards.get(agent_id, 0))
-                    self.reward_buffer.appendleft(self.cumulative_rewards.get(agent_id, 0))
-                    self.stats['Environment/Episode Length'].append(
-                        self.episode_steps.get(agent_id, 0))
-                    self.cumulative_rewards[agent_id] = 0
-                    self.episode_steps[agent_id] = 0
-                    if self.use_curiosity:
-                        self.stats['Policy/Curiosity Reward'].append(
-                            self.intrinsic_rewards.get(agent_id, 0))
-                        self.intrinsic_rewards[agent_id] = 0
+        value_next = self.policy.get_value_estimates(
+            trajectory.next_obs,
+            agent_id,
+            trajectory.done_reached and not trajectory.max_step_reached,
+        )
 
-    def end_episode(self):
-        """
-        A signal that the Episode has ended. The buffer must be reset. 
-        Get only called when the academy resets.
-        """
-        self.training_buffer.reset_local_buffers()
-        for agent_id in self.cumulative_rewards:
-            self.cumulative_rewards[agent_id] = 0
-        for agent_id in self.episode_steps:
-            self.episode_steps[agent_id] = 0
-        if self.use_curiosity:
-            for agent_id in self.intrinsic_rewards:
-                self.intrinsic_rewards[agent_id] = 0
+        # Evaluate all reward functions
+        self.collected_rewards["environment"][agent_id] += np.sum(
+            agent_buffer_trajectory["environment_rewards"]
+        )
+        for name, reward_signal in self.policy.reward_signals.items():
+            evaluate_result = reward_signal.evaluate_batch(
+                agent_buffer_trajectory
+            ).scaled_reward
+            agent_buffer_trajectory["{}_rewards".format(name)].extend(evaluate_result)
+            # Report the reward signals
+            self.collected_rewards[name][agent_id] += np.sum(evaluate_result)
 
-    def is_ready_update(self):
+        # Compute GAE and returns
+        tmp_advantages = []
+        tmp_returns = []
+        for name in self.policy.reward_signals:
+            bootstrap_value = value_next[name]
+
+            local_rewards = agent_buffer_trajectory[
+                "{}_rewards".format(name)
+            ].get_batch()
+            local_value_estimates = agent_buffer_trajectory[
+                "{}_value_estimates".format(name)
+            ].get_batch()
+            local_advantage = get_gae(
+                rewards=local_rewards,
+                value_estimates=local_value_estimates,
+                value_next=bootstrap_value,
+                gamma=self.policy.reward_signals[name].gamma,
+                lambd=self.trainer_parameters["lambd"],
+            )
+            local_return = local_advantage + local_value_estimates
+            # This is later use as target for the different value estimates
+            agent_buffer_trajectory["{}_returns".format(name)].set(local_return)
+            agent_buffer_trajectory["{}_advantage".format(name)].set(local_advantage)
+            tmp_advantages.append(local_advantage)
+            tmp_returns.append(local_return)
+
+        # Get global advantages
+        global_advantages = list(
+            np.mean(np.array(tmp_advantages, dtype=np.float32), axis=0)
+        )
+        global_returns = list(np.mean(np.array(tmp_returns, dtype=np.float32), axis=0))
+        agent_buffer_trajectory["advantages"].set(global_advantages)
+        agent_buffer_trajectory["discounted_returns"].set(global_returns)
+        # Append to update buffer
+        agent_buffer_trajectory.resequence_and_append(
+            self.update_buffer, training_length=self.policy.sequence_length
+        )
+
+        # If this was a terminal trajectory, append stats and reset reward collection
+        if trajectory.done_reached:
+            self._update_end_episode_stats(
+                agent_id, self.get_policy(trajectory.behavior_id)
+            )
+
+    def _is_ready_update(self):
         """
         Returns whether or not the trainer has enough elements to run update model
         :return: A boolean corresponding to whether or not update_model() can be run
         """
-        size_of_buffer = len(self.training_buffer.update_buffer['actions'])
-        return size_of_buffer > max(int(self.trainer_parameters['buffer_size'] / self.policy.sequence_length), 1)
+        size_of_buffer = self.update_buffer.num_experiences
+        return size_of_buffer > self.trainer_parameters["buffer_size"]
 
-    def update_policy(self):
+    def _update_policy(self):
         """
         Uses demonstration_buffer to update the policy.
+        The reward signal generators must be updated in this method at their own pace.
         """
-        n_sequences = max(int(self.trainer_parameters['batch_size'] / self.policy.sequence_length), 1)
-        value_total, policy_total, forward_total, inverse_total = [], [], [], []
-        advantages = self.training_buffer.update_buffer['advantages'].get_batch()
-        self.training_buffer.update_buffer['advantages'].set(
-            (advantages - advantages.mean()) / (advantages.std() + 1e-10))
-        num_epoch = self.trainer_parameters['num_epoch']
-        for k in range(num_epoch):
-            self.training_buffer.update_buffer.shuffle()
-            buffer = self.training_buffer.update_buffer
-            for l in range(len(self.training_buffer.update_buffer['actions']) // n_sequences):
-                start = l * n_sequences
-                end = (l + 1) * n_sequences
-                run_out = self.policy.update(buffer.make_mini_batch(start, end), n_sequences)
-                value_total.append(run_out['value_loss'])
-                policy_total.append(np.abs(run_out['policy_loss']))
-                if self.use_curiosity:
-                    inverse_total.append(run_out['inverse_loss'])
-                    forward_total.append(run_out['forward_loss'])
-        self.stats['Losses/Value Loss'].append(np.mean(value_total))
-        self.stats['Losses/Policy Loss'].append(np.mean(policy_total))
-        if self.use_curiosity:
-            self.stats['Losses/Forward Loss'].append(np.mean(forward_total))
-            self.stats['Losses/Inverse Loss'].append(np.mean(inverse_total))
-        self.training_buffer.reset_update_buffer()
+        buffer_length = self.update_buffer.num_experiences
+        self.cumulative_returns_since_policy_update.clear()
+
+        # Make sure batch_size is a multiple of sequence length. During training, we
+        # will need to reshape the data into a batch_size x sequence_length tensor.
+        batch_size = (
+            self.trainer_parameters["batch_size"]
+            - self.trainer_parameters["batch_size"] % self.policy.sequence_length
+        )
+        # Make sure there is at least one sequence
+        batch_size = max(batch_size, self.policy.sequence_length)
+
+        n_sequences = max(
+            int(self.trainer_parameters["batch_size"] / self.policy.sequence_length), 1
+        )
+
+        advantages = self.update_buffer["advantages"].get_batch()
+        self.update_buffer["advantages"].set(
+            (advantages - advantages.mean()) / (advantages.std() + 1e-10)
+        )
+        num_epoch = self.trainer_parameters["num_epoch"]
+        batch_update_stats = defaultdict(list)
+        for _ in range(num_epoch):
+            self.update_buffer.shuffle(sequence_length=self.policy.sequence_length)
+            buffer = self.update_buffer
+            max_num_batch = buffer_length // batch_size
+            for l in range(0, max_num_batch * batch_size, batch_size):
+                update_stats = self.policy.update(
+                    buffer.make_mini_batch(l, l + batch_size), n_sequences
+                )
+                for stat_name, value in update_stats.items():
+                    batch_update_stats[stat_name].append(value)
+
+        for stat, stat_list in batch_update_stats.items():
+            self.stats_reporter.add_stat(stat, np.mean(stat_list))
+
+        if self.policy.bc_module:
+            update_stats = self.policy.bc_module.update()
+            for stat, val in update_stats.items():
+                self.stats_reporter.add_stat(stat, val)
+        self.clear_update_buffer()
+
+    def create_policy(self, brain_parameters: BrainParameters) -> TFPolicy:
+        """
+        Creates a PPO policy to trainers list of policies.
+        :param brain_parameters: specifications for policy construction
+        :return policy
+        """
+
+        if self.multi_gpu and len(get_devices()) > 1:
+            policy: PPOPolicy = MultiGpuPPOPolicy(
+                self.seed,
+                brain_parameters,
+                self.trainer_parameters,
+                self.is_training,
+                self.load,
+            )
+        else:
+            policy = PPOPolicy(
+                self.seed,
+                brain_parameters,
+                self.trainer_parameters,
+                self.is_training,
+                self.load,
+            )
+
+        for _reward_signal in policy.reward_signals.keys():
+            self.collected_rewards[_reward_signal] = defaultdict(lambda: 0)
+
+        return policy
+
+    def add_policy(self, name_behavior_id: str, policy: TFPolicy) -> None:
+        """
+        Adds policy to trainer.
+        :param brain_parameters: specifications for policy construction
+        """
+        if self.policy:
+            logger.warning(
+                "add_policy has been called twice. {} is not a multi-agent trainer".format(
+                    self.__class__.__name__
+                )
+            )
+        if not isinstance(policy, PPOPolicy):
+            raise RuntimeError("Non-PPOPolicy passed to PPOTrainer.add_policy()")
+        self.policy = policy
+        # Needed to resume loads properly
+        self.step = policy.get_current_step()
+        self.next_summary_step = self._get_next_summary_step()
+
+    def get_policy(self, name_behavior_id: str) -> TFPolicy:
+        """
+        Gets policy from trainer associated with name_behavior_id
+        :param name_behavior_id: full identifier of policy
+        """
+
+        return self.policy
 
 
 def discount_rewards(r, gamma=0.99, value_next=0.0):
@@ -380,7 +298,7 @@ def get_gae(rewards, value_estimates, value_next=0.0, gamma=0.99, lambd=0.95):
     :param lambd: GAE weighing factor.
     :return: list of advantage estimates for time-steps t to T.
     """
-    value_estimates = np.asarray(value_estimates.tolist() + [value_next])
+    value_estimates = np.append(value_estimates, value_next)
     delta_t = rewards + gamma * value_estimates[1:] - value_estimates[:-1]
     advantage = discount_rewards(r=delta_t, gamma=gamma * lambd)
     return advantage

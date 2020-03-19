@@ -1,6 +1,6 @@
 # 学习环境示例
 
-Unity ML-Agents 工具包中内置了一些搭建好的学习环境的示例，并且我们还在不断增加新的示例，这些示例演示了该平台的各种功能。示例环境位于 
+Unity ML-Agents 工具包中内置了一些搭建好的学习环境的示例，并且我们还在不断增加新的示例，这些示例演示了该平台的各种功能。示例环境位于
 `unity-environment/Assets/ML-Agents/Examples` 中，并且我们在下文中进行了简单的介绍。
 此外，我们的
 [首届 ML-Agents 挑战赛](https://connect.unity.com/challenges/ml-agents-1)
@@ -11,7 +11,7 @@ Unity ML-Agents 工具包中内置了一些搭建好的学习环境的示例，�
 页面。
 
 如果您想提交自己的环境，请参阅我们的
-[贡献指南](/CONTRIBUTING.md)页面。
+[贡献指南](/com.unity.ml-agents/CONTRIBUTING.md)页面。
 
 ## Basic
 
