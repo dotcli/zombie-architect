@@ -13,8 +13,6 @@ public class ZomboxAgent : Agent
 	[HideInInspector]
     public Bounds areaBounds;
 
-    PrototypeAcademy academy;
-
     /// <summary>
     /// The tags the agent can see via raycasting
     /// </summary>
@@ -23,33 +21,28 @@ public class ZomboxAgent : Agent
     public bool useVectorObs;
 
     Rigidbody agentRB;  //cached on initialization
-    RayPerception rayPer;
-
-    void Awake()
-    {
-        academy = FindObjectOfType<PrototypeAcademy>(); //cache the academy
-    }
+    //RayPerception rayPer;
 
     public override void InitializeAgent()
     {
         base.InitializeAgent();
-        rayPer = GetComponent<RayPerception>();
+        //rayPer = GetComponent<RayPerception>();
 
         // Cache the agent rigidbody
         agentRB = GetComponent<Rigidbody>();
     }
 
-    public override void CollectObservations()
-    {
-        if (useVectorObs)
-        {
-            var rayDistance = 36f;
-            float[] rayAngles = { 0f, 45f, 90f, 135f, 180f, 110f, 70f, 270f };
-            var detectableObjects = detectableTags.Split(' ');
-            AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 0f, 0f));
-            AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 1.5f, 0f));
-        }
-    }
+    //public override void CollectObservations()
+    //{
+    //    if (useVectorObs)
+    //    {
+    //        var rayDistance = 36f;
+    //        float[] rayAngles = { 0f, 45f, 90f, 135f, 180f, 110f, 70f, 270f };
+    //        var detectableObjects = detectableTags.Split(' ');
+    //        AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 0f, 0f));
+    //        AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 1.5f, 0f));
+    //    }
+    //}
 
     /// <summary>
     /// Moves the agent according to the selected action.
@@ -85,7 +78,7 @@ public class ZomboxAgent : Agent
                 break;
         }
         transform.Rotate(rotateDir, Time.fixedDeltaTime * 200f);
-        agentRB.AddForce(dirToGo * academy.agentRunSpeed,
+        agentRB.AddForce(dirToGo * Academy.Instance.FloatProperties.GetPropertyWithDefault("agentRunSpeed", 1f),
                          ForceMode.VelocityChange);
 
     }
@@ -93,7 +86,7 @@ public class ZomboxAgent : Agent
     /// <summary>
     /// Called every step of the engine. Here the agent takes an action.
     /// </summary>
-	public override void AgentAction(float[] vectorAction, string textAction)
+	public override void AgentAction(float[] vectorAction)
     {
         // Move the agent using the action.
         MoveAgent(vectorAction);

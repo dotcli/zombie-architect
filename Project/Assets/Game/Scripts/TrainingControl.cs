@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿// [DEPRECATED]
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using MLAgents;
@@ -75,6 +77,9 @@ public class TrainingControl : MonoBehaviour {
 	}
 
 	void FixedUpdate() {
-		myAgent.SetTextObs(recordExperiences + "," + resetBuffer);
+        // Commented out because 
+        // using SetTextObs to control recording and buffer 
+        // is deprecated.
+		//myAgent.SetTextObs(recordExperiences + "," + resetBuffer);
 	}
 }
