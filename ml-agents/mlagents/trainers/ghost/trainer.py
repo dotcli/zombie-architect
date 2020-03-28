@@ -1,7 +1,6 @@
 # # Unity ML-Agents Toolkit
 # ## ML-Agent Learning (Ghost Trainer)
 
-# import logging
 from typing import Deque, Dict, List, Any, cast
 
 import numpy as np
@@ -9,13 +8,13 @@ import logging
 
 from mlagents.trainers.brain import BrainParameters
 from mlagents.trainers.policy import Policy
-from mlagents.trainers.tf_policy import TFPolicy
+from mlagents.trainers.policy.tf_policy import TFPolicy
 
 from mlagents.trainers.trainer import Trainer
 from mlagents.trainers.trajectory import Trajectory
 from mlagents.trainers.agent_processor import AgentManagerQueue
 
-LOGGER = logging.getLogger("mlagents.trainers")
+logger = logging.getLogger("mlagents.trainers")
 
 
 class GhostTrainer(Trainer):
@@ -40,6 +39,7 @@ class GhostTrainer(Trainer):
 
         self.internal_policy_queues: List[AgentManagerQueue[Policy]] = []
         self.internal_trajectory_queues: List[AgentManagerQueue[Trajectory]] = []
+        self.ignored_trajectory_queues: List[AgentManagerQueue[Trajectory]] = []
         self.learning_policy_queues: Dict[str, AgentManagerQueue[Policy]] = {}
 
         # assign ghost's stats collection to wrapped trainer's
@@ -92,7 +92,7 @@ class GhostTrainer(Trainer):
         Saves training statistics to Tensorboard.
         """
         opponents = np.array(self.policy_elos, dtype=np.float32)
-        LOGGER.info(
+        logger.info(
             " Learning brain {} ELO: {:0.3f}\n"
             "Mean Opponent ELO: {:0.3f}"
             " Std Opponent ELO: {:0.3f}".format(
@@ -134,10 +134,14 @@ class GhostTrainer(Trainer):
             self.trajectory_queues, self.internal_trajectory_queues
         ):
             try:
-                t = traj_queue.get_nowait()
-                # adds to wrapped trainers queue
-                internal_traj_queue.put(t)
-                self._process_trajectory(t)
+                # We grab at most the maximum length of the queue.
+                # This ensures that even if the queue is being filled faster than it is
+                # being emptied, the trajectories in the queue are on-policy.
+                for _ in range(traj_queue.maxlen):
+                    t = traj_queue.get_nowait()
+                    # adds to wrapped trainers queue
+                    internal_traj_queue.put(t)
+                    self._process_trajectory(t)
             except AgentManagerQueue.Empty:
                 pass
 
@@ -162,6 +166,14 @@ class GhostTrainer(Trainer):
             self._swap_snapshots()
             self.last_swap = self.get_step
 
+        # Dump trajectories from non-learning policy
+        for traj_queue in self.ignored_trajectory_queues:
+            try:
+                for _ in range(traj_queue.maxlen):
+                    traj_queue.get_nowait()
+            except AgentManagerQueue.Empty:
+                pass
+
     def end_episode(self):
         self.trainer.end_episode()
 
@@ -175,17 +187,25 @@ class GhostTrainer(Trainer):
         return self.trainer.create_policy(brain_parameters)
 
     def add_policy(self, name_behavior_id: str, policy: TFPolicy) -> None:
-        # for saving/swapping snapshots
-        policy.init_load_weights()
+        """
+        Adds policy to trainer. For the first policy added, add a trainer
+        to the policy and set the learning behavior name to name_behavior_id.
+        :param name_behavior_id: Behavior ID that the policy should belong to.
+        :param policy: Policy to associate with name_behavior_id.
+        """
         self.policies[name_behavior_id] = policy
+        policy.create_tf_graph()
 
         # First policy encountered
         if not self.learning_behavior_name:
             weights = policy.get_weights()
             self.current_policy_snapshot = weights
-            self._save_snapshot(policy)
             self.trainer.add_policy(name_behavior_id, policy)
+            self._save_snapshot(policy)  # Need to save after trainer initializes policy
             self.learning_behavior_name = name_behavior_id
+        else:
+            # for saving/swapping snapshots
+            policy.init_load_weights()
 
     def get_policy(self, name_behavior_id: str) -> TFPolicy:
         return self.policies[name_behavior_id]
@@ -213,7 +233,7 @@ class GhostTrainer(Trainer):
                 x = "current"
                 self.policy_elos[-1] = self.current_elo
             self.current_opponent = -1 if x == "current" else x
-            LOGGER.debug(
+            logger.debug(
                 "Step {}: Swapping snapshot {} to id {} with {} learning".format(
                     self.get_step, x, name_behavior_id, self.learning_behavior_name
                 )
@@ -256,6 +276,8 @@ class GhostTrainer(Trainer):
 
             self.internal_trajectory_queues.append(internal_trajectory_queue)
             self.trainer.subscribe_trajectory_queue(internal_trajectory_queue)
+        else:
+            self.ignored_trajectory_queues.append(trajectory_queue)
 
 
 # Taken from https://github.com/Unity-Technologies/ml-agents/pull/1975 and

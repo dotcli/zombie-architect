@@ -1,4 +1,4 @@
-﻿// [DEPRECATED]
+﻿// [DEPRECATED] New version doesn't support pausing recordings, or buffer reset
 
 using System.Collections;
 using System.Collections.Generic;

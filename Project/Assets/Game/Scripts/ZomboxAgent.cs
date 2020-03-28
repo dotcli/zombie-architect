@@ -1,5 +1,3 @@
-//Put this script on your blue cube.
-
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -13,23 +11,16 @@ public class ZomboxAgent : Agent
 	[HideInInspector]
     public Bounds areaBounds;
 
-    /// <summary>
-    /// The tags the agent can see via raycasting
-    /// </summary>
-    public string detectableTags = "block goal edge";
-
-    public bool useVectorObs;
 
     Rigidbody agentRB;  //cached on initialization
     //RayPerception rayPer;
 
-    public override void InitializeAgent()
+    public override void Initialize()
     {
-        base.InitializeAgent();
-        //rayPer = GetComponent<RayPerception>();
-
         // Cache the agent rigidbody
         agentRB = GetComponent<Rigidbody>();
+
+        resetVelocity();
     }
 
     //public override void CollectObservations()
@@ -55,7 +46,6 @@ public class ZomboxAgent : Agent
 
         int action = Mathf.FloorToInt(act[0]);
 
-        // Goalies and Strikers have slightly different action spaces.
         switch (action)
         {
             case 1:
@@ -70,11 +60,7 @@ public class ZomboxAgent : Agent
             case 4:
                 rotateDir = transform.up * -1f;
                 break;
-            case 5:
-                dirToGo = transform.right * -0.75f;
-                break;
-            case 6:
-                dirToGo = transform.right * 0.75f;
+            default:
                 break;
         }
         transform.Rotate(rotateDir, Time.fixedDeltaTime * 200f);
@@ -83,10 +69,32 @@ public class ZomboxAgent : Agent
 
     }
 
+    public override float[] Heuristic()
+    {
+        if (Input.GetKey(KeyCode.D))
+        {
+            return new float[] { 3 };
+        }
+        if (Input.GetKey(KeyCode.W))
+        {
+            return new float[] { 1 };
+        }
+        if (Input.GetKey(KeyCode.A))
+        {
+            return new float[] { 4 };
+        }
+        if (Input.GetKey(KeyCode.S))
+        {
+            return new float[] { 2 };
+        }
+
+        return new float[] { 0 };
+    }
+
     /// <summary>
     /// Called every step of the engine. Here the agent takes an action.
     /// </summary>
-	public override void AgentAction(float[] vectorAction)
+	public override void OnActionReceived(float[] vectorAction)
     {
         // Move the agent using the action.
         MoveAgent(vectorAction);

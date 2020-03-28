@@ -1,5 +1,6 @@
 using UnityEngine;
 using MLAgents;
+using MLAgents.Sensors;
 
 public class ReacherAgent : Agent
 {
@@ -23,7 +24,7 @@ public class ReacherAgent : Agent
     /// Collect the rigidbodies of the reacher in order to resue them for
     /// observations and actions.
     /// </summary>
-    public override void InitializeAgent()
+    public override void Initialize()
     {
         m_RbA = pendulumA.GetComponent<Rigidbody>();
         m_RbB = pendulumB.GetComponent<Rigidbody>();
@@ -35,28 +36,28 @@ public class ReacherAgent : Agent
     /// We collect the normalized rotations, angularal velocities, and velocities of both
     /// limbs of the reacher as well as the relative position of the target and hand.
     /// </summary>
-    public override void CollectObservations()
+    public override void CollectObservations(VectorSensor sensor)
     {
-        AddVectorObs(pendulumA.transform.localPosition);
-        AddVectorObs(pendulumA.transform.rotation);
-        AddVectorObs(m_RbA.angularVelocity);
-        AddVectorObs(m_RbA.velocity);
+        sensor.AddObservation(pendulumA.transform.localPosition);
+        sensor.AddObservation(pendulumA.transform.rotation);
+        sensor.AddObservation(m_RbA.angularVelocity);
+        sensor.AddObservation(m_RbA.velocity);
 
-        AddVectorObs(pendulumB.transform.localPosition);
-        AddVectorObs(pendulumB.transform.rotation);
-        AddVectorObs(m_RbB.angularVelocity);
-        AddVectorObs(m_RbB.velocity);
+        sensor.AddObservation(pendulumB.transform.localPosition);
+        sensor.AddObservation(pendulumB.transform.rotation);
+        sensor.AddObservation(m_RbB.angularVelocity);
+        sensor.AddObservation(m_RbB.velocity);
 
-        AddVectorObs(goal.transform.localPosition);
-        AddVectorObs(hand.transform.localPosition);
+        sensor.AddObservation(goal.transform.localPosition);
+        sensor.AddObservation(hand.transform.localPosition);
 
-        AddVectorObs(m_GoalSpeed);
+        sensor.AddObservation(m_GoalSpeed);
     }
 
     /// <summary>
     /// The agent's four actions correspond to torques on each of the two joints.
     /// </summary>
-    public override void AgentAction(float[] vectorAction)
+    public override void OnActionReceived(float[] vectorAction)
     {
         m_GoalDegree += m_GoalSpeed;
         UpdateGoalPosition();
@@ -85,7 +86,7 @@ public class ReacherAgent : Agent
     /// <summary>
     /// Resets the position and velocity of the agent and the goal.
     /// </summary>
-    public override void AgentReset()
+    public override void OnEpisodeBegin()
     {
         pendulumA.transform.position = new Vector3(0f, -4f, 0f) + transform.position;
         pendulumA.transform.rotation = Quaternion.Euler(180f, 0f, 0f);

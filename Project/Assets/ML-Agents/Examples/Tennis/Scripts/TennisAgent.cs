@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using MLAgents;
+using MLAgents.Sensors;
+using MLAgents.SideChannels;
 
 public class TennisAgent : Agent
 {
@@ -16,7 +18,7 @@ public class TennisAgent : Agent
     Rigidbody m_AgentRb;
     Rigidbody m_BallRb;
     float m_InvertMult;
-    IFloatProperties m_ResetParams;
+    FloatPropertiesChannel m_ResetParams;
 
     // Looks for the scoreboard based on the name of the gameObjects.
     // Do not modify the names of the Score GameObjects
@@ -24,7 +26,7 @@ public class TennisAgent : Agent
     const string k_ScoreBoardAName = "ScoreA";
     const string k_ScoreBoardBName = "ScoreB";
 
-    public override void InitializeAgent()
+    public override void Initialize()
     {
         m_AgentRb = GetComponent<Rigidbody>();
         m_BallRb = ball.GetComponent<Rigidbody>();
@@ -43,22 +45,22 @@ public class TennisAgent : Agent
         SetResetParameters();
     }
 
-    public override void CollectObservations()
+    public override void CollectObservations(VectorSensor sensor)
     {
-        AddVectorObs(m_InvertMult * (transform.position.x - myArea.transform.position.x));
-        AddVectorObs(transform.position.y - myArea.transform.position.y);
-        AddVectorObs(m_InvertMult * m_AgentRb.velocity.x);
-        AddVectorObs(m_AgentRb.velocity.y);
+        sensor.AddObservation(m_InvertMult * (transform.position.x - myArea.transform.position.x));
+        sensor.AddObservation(transform.position.y - myArea.transform.position.y);
+        sensor.AddObservation(m_InvertMult * m_AgentRb.velocity.x);
+        sensor.AddObservation(m_AgentRb.velocity.y);
 
-        AddVectorObs(m_InvertMult * (ball.transform.position.x - myArea.transform.position.x));
-        AddVectorObs(ball.transform.position.y - myArea.transform.position.y);
-        AddVectorObs(m_InvertMult * m_BallRb.velocity.x);
-        AddVectorObs(m_BallRb.velocity.y);
+        sensor.AddObservation(m_InvertMult * (ball.transform.position.x - myArea.transform.position.x));
+        sensor.AddObservation(ball.transform.position.y - myArea.transform.position.y);
+        sensor.AddObservation(m_InvertMult * m_BallRb.velocity.x);
+        sensor.AddObservation(m_BallRb.velocity.y);
 
-        AddVectorObs(m_InvertMult * gameObject.transform.rotation.z);
+        sensor.AddObservation(m_InvertMult * gameObject.transform.rotation.z);
     }
 
-    public override void AgentAction(float[] vectorAction)
+    public override void OnActionReceived(float[] vectorAction)
     {
         var moveX = Mathf.Clamp(vectorAction[0], -1f, 1f) * m_InvertMult;
         var moveY = Mathf.Clamp(vectorAction[1], -1f, 1f);
@@ -93,7 +95,7 @@ public class TennisAgent : Agent
         return action;
     }
 
-    public override void AgentReset()
+    public override void OnEpisodeBegin()
     {
         m_InvertMult = invertX ? -1f : 1f;
 

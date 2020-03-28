@@ -1,29 +1,31 @@
 using UnityEngine;
 using MLAgents;
+using MLAgents.Sensors;
+using MLAgents.SideChannels;
 
 public class Ball3DAgent : Agent
 {
     [Header("Specific to Ball3D")]
     public GameObject ball;
     Rigidbody m_BallRb;
-    IFloatProperties m_ResetParams;
+    FloatPropertiesChannel m_ResetParams;
 
-    public override void InitializeAgent()
+    public override void Initialize()
     {
         m_BallRb = ball.GetComponent<Rigidbody>();
         m_ResetParams = Academy.Instance.FloatProperties;
         SetResetParameters();
     }
 
-    public override void CollectObservations()
+    public override void CollectObservations(VectorSensor sensor)
     {
-        AddVectorObs(gameObject.transform.rotation.z);
-        AddVectorObs(gameObject.transform.rotation.x);
-        AddVectorObs(ball.transform.position - gameObject.transform.position);
-        AddVectorObs(m_BallRb.velocity);
+        sensor.AddObservation(gameObject.transform.rotation.z);
+        sensor.AddObservation(gameObject.transform.rotation.x);
+        sensor.AddObservation(ball.transform.position - gameObject.transform.position);
+        sensor.AddObservation(m_BallRb.velocity);
     }
 
-    public override void AgentAction(float[] vectorAction)
+    public override void OnActionReceived(float[] vectorAction)
     {
         var actionZ = 2f * Mathf.Clamp(vectorAction[0], -1f, 1f);
         var actionX = 2f * Mathf.Clamp(vectorAction[1], -1f, 1f);
@@ -44,7 +46,7 @@ public class Ball3DAgent : Agent
             Mathf.Abs(ball.transform.position.z - gameObject.transform.position.z) > 3f)
         {
             SetReward(-1f);
-            Done();
+            EndEpisode();
         }
         else
         {
@@ -52,7 +54,7 @@ public class Ball3DAgent : Agent
         }
     }
 
-    public override void AgentReset()
+    public override void OnEpisodeBegin()
     {
         gameObject.transform.rotation = new Quaternion(0f, 0f, 0f, 0f);
         gameObject.transform.Rotate(new Vector3(1, 0, 0), Random.Range(-10f, 10f));

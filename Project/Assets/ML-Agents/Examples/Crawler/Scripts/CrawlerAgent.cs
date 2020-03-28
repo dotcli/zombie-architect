@@ -1,6 +1,7 @@
 using UnityEngine;
 using MLAgents;
 using MLAgentsExamples;
+using MLAgents.Sensors;
 
 [RequireComponent(typeof(JointDriveController))] // Required to set joint forces
 public class CrawlerAgent : Agent
@@ -51,7 +52,7 @@ public class CrawlerAgent : Agent
     Quaternion m_LookRotation;
     Matrix4x4 m_TargetDirMatrix;
 
-    public override void InitializeAgent()
+    public override void Initialize()
     {
         m_JdController = GetComponent<JointDriveController>();
         m_DirToTarget = target.position - body.position;
@@ -72,29 +73,29 @@ public class CrawlerAgent : Agent
     /// <summary>
     /// Add relevant information on each body part to observations.
     /// </summary>
-    public void CollectObservationBodyPart(BodyPart bp)
+    public void CollectObservationBodyPart(BodyPart bp, VectorSensor sensor)
     {
         var rb = bp.rb;
-        AddVectorObs(bp.groundContact.touchingGround ? 1 : 0); // Whether the bp touching the ground
+        sensor.AddObservation(bp.groundContact.touchingGround ? 1 : 0); // Whether the bp touching the ground
 
         var velocityRelativeToLookRotationToTarget = m_TargetDirMatrix.inverse.MultiplyVector(rb.velocity);
-        AddVectorObs(velocityRelativeToLookRotationToTarget);
+        sensor.AddObservation(velocityRelativeToLookRotationToTarget);
 
         var angularVelocityRelativeToLookRotationToTarget = m_TargetDirMatrix.inverse.MultiplyVector(rb.angularVelocity);
-        AddVectorObs(angularVelocityRelativeToLookRotationToTarget);
+        sensor.AddObservation(angularVelocityRelativeToLookRotationToTarget);
 
         if (bp.rb.transform != body)
         {
             var localPosRelToBody = body.InverseTransformPoint(rb.position);
-            AddVectorObs(localPosRelToBody);
-            AddVectorObs(bp.currentXNormalizedRot); // Current x rot
-            AddVectorObs(bp.currentYNormalizedRot); // Current y rot
-            AddVectorObs(bp.currentZNormalizedRot); // Current z rot
-            AddVectorObs(bp.currentStrength / m_JdController.maxJointForceLimit);
+            sensor.AddObservation(localPosRelToBody);
+            sensor.AddObservation(bp.currentXNormalizedRot); // Current x rot
+            sensor.AddObservation(bp.currentYNormalizedRot); // Current y rot
+            sensor.AddObservation(bp.currentZNormalizedRot); // Current z rot
+            sensor.AddObservation(bp.currentStrength / m_JdController.maxJointForceLimit);
         }
     }
 
-    public override void CollectObservations()
+    public override void CollectObservations(VectorSensor sensor)
     {
         m_JdController.GetCurrentJointForces();
 
@@ -106,21 +107,21 @@ public class CrawlerAgent : Agent
         RaycastHit hit;
         if (Physics.Raycast(body.position, Vector3.down, out hit, 10.0f))
         {
-            AddVectorObs(hit.distance);
+            sensor.AddObservation(hit.distance);
         }
         else
-            AddVectorObs(10.0f);
+            sensor.AddObservation(10.0f);
 
         // Forward & up to help with orientation
         var bodyForwardRelativeToLookRotationToTarget = m_TargetDirMatrix.inverse.MultiplyVector(body.forward);
-        AddVectorObs(bodyForwardRelativeToLookRotationToTarget);
+        sensor.AddObservation(bodyForwardRelativeToLookRotationToTarget);
 
         var bodyUpRelativeToLookRotationToTarget = m_TargetDirMatrix.inverse.MultiplyVector(body.up);
-        AddVectorObs(bodyUpRelativeToLookRotationToTarget);
+        sensor.AddObservation(bodyUpRelativeToLookRotationToTarget);
 
         foreach (var bodyPart in m_JdController.bodyPartsDict.Values)
         {
-            CollectObservationBodyPart(bodyPart);
+            CollectObservationBodyPart(bodyPart, sensor);
         }
     }
 
@@ -146,7 +147,7 @@ public class CrawlerAgent : Agent
         target.position = newTargetPos + ground.position;
     }
 
-    public override void AgentAction(float[] vectorAction)
+    public override void OnActionReceived(float[] vectorAction)
     {
         // The dictionary with all the body parts in it are in the jdController
         var bpDict = m_JdController.bodyPartsDict;
@@ -250,7 +251,7 @@ public class CrawlerAgent : Agent
     /// <summary>
     /// Loop over body parts and reset them to initial conditions.
     /// </summary>
-    public override void AgentReset()
+    public override void OnEpisodeBegin()
     {
         if (m_DirToTarget != Vector3.zero)
         {

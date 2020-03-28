@@ -2,6 +2,7 @@ using System;
 using NUnit.Framework;
 using System.Collections.Generic;
 using System.Text;
+using MLAgents.SideChannels;
 
 namespace MLAgents.Tests
 {
@@ -12,16 +13,23 @@ namespace MLAgents.Tests
         {
             public List<int> messagesReceived = new List<int>();
 
-            public override int ChannelType() { return -1; }
-
-            public override void OnMessageReceived(byte[] data)
+            public TestSideChannel()
             {
-                messagesReceived.Add(BitConverter.ToInt32(data, 0));
+                ChannelId = new Guid("6afa2c06-4f82-11ea-b238-784f4387d1f7");
             }
 
-            public void SendInt(int data)
+            public override void OnMessageReceived(IncomingMessage msg)
             {
-                QueueMessageToSend(BitConverter.GetBytes(data));
+                messagesReceived.Add(msg.ReadInt32());
+            }
+
+            public void SendInt(int value)
+            {
+                using (var msg = new OutgoingMessage())
+                {
+                    msg.WriteInt32(value);
+                    QueueMessageToSend(msg);
+                }
             }
         }
 
@@ -30,8 +38,8 @@ namespace MLAgents.Tests
         {
             var intSender = new TestSideChannel();
             var intReceiver = new TestSideChannel();
-            var dictSender = new Dictionary<int, SideChannel> { { intSender.ChannelType(), intSender } };
-            var dictReceiver = new Dictionary<int, SideChannel> { { intReceiver.ChannelType(), intReceiver } };
+            var dictSender = new Dictionary<Guid, SideChannel> { { intSender.ChannelId, intSender } };
+            var dictReceiver = new Dictionary<Guid, SideChannel> { { intReceiver.ChannelId, intReceiver } };
 
             intSender.SendInt(4);
             intSender.SendInt(5);
@@ -51,10 +59,10 @@ namespace MLAgents.Tests
             var str1 = "Test string";
             var str2 = "Test string, second";
 
-            var strSender = new RawBytesChannel();
-            var strReceiver = new RawBytesChannel();
-            var dictSender = new Dictionary<int, SideChannel> { { strSender.ChannelType(), strSender } };
-            var dictReceiver = new Dictionary<int, SideChannel> { { strReceiver.ChannelType(), strReceiver } };
+            var strSender = new RawBytesChannel(new Guid("9a5b8954-4f82-11ea-b238-784f4387d1f7"));
+            var strReceiver = new RawBytesChannel(new Guid("9a5b8954-4f82-11ea-b238-784f4387d1f7"));
+            var dictSender = new Dictionary<Guid, SideChannel> { { strSender.ChannelId, strSender } };
+            var dictReceiver = new Dictionary<Guid, SideChannel> { { strReceiver.ChannelId, strReceiver } };
 
             strSender.SendRawBytes(Encoding.ASCII.GetBytes(str1));
             strSender.SendRawBytes(Encoding.ASCII.GetBytes(str2));
@@ -78,8 +86,8 @@ namespace MLAgents.Tests
 
             var propA = new FloatPropertiesChannel();
             var propB = new FloatPropertiesChannel();
-            var dictReceiver = new Dictionary<int, SideChannel> { { propA.ChannelType(), propA } };
-            var dictSender = new Dictionary<int, SideChannel> { { propB.ChannelType(), propB } };
+            var dictReceiver = new Dictionary<Guid, SideChannel> { { propA.ChannelId, propA } };
+            var dictSender = new Dictionary<Guid, SideChannel> { { propB.ChannelId, propB } };
 
             propA.RegisterCallback(k1, f => { wasCalled++; });
             var tmp = propB.GetPropertyWithDefault(k2, 3.0f);
@@ -100,6 +108,60 @@ namespace MLAgents.Tests
             fakeData = RpcCommunicator.GetSideChannelMessage(dictSender);
             RpcCommunicator.ProcessSideChannelData(dictReceiver, fakeData);
             Assert.AreEqual(wasCalled, 1);
+
+            var keysA = propA.ListProperties();
+            Assert.AreEqual(2, keysA.Count);
+            Assert.IsTrue(keysA.Contains(k1));
+            Assert.IsTrue(keysA.Contains(k2));
+
+            var keysB = propA.ListProperties();
+            Assert.AreEqual(2, keysB.Count);
+            Assert.IsTrue(keysB.Contains(k1));
+            Assert.IsTrue(keysB.Contains(k2));
+        }
+
+        [Test]
+        public void TestOutgoingMessageRawBytes()
+        {
+            // Make sure that SetRawBytes resets the buffer correctly.
+            // Write 8 bytes (an int and float) then call SetRawBytes with 4 bytes
+            var msg = new OutgoingMessage();
+            msg.WriteInt32(42);
+            msg.WriteFloat32(1.0f);
+
+            var data = new byte[] { 1, 2, 3, 4 };
+            msg.SetRawBytes(data);
+
+            var result = msg.ToByteArray();
+            Assert.AreEqual(data, result);
+        }
+
+        [Test]
+        public void TestMessageReadWrites()
+        {
+            var boolVal = true;
+            var intVal = 1337;
+            var floatVal = 4.2f;
+            var floatListVal = new float[] { 1001, 1002 };
+            var stringVal = "mlagents!";
+
+            IncomingMessage incomingMsg;
+            using (var outgoingMsg = new OutgoingMessage())
+            {
+                outgoingMsg.WriteBoolean(boolVal);
+                outgoingMsg.WriteInt32(intVal);
+                outgoingMsg.WriteFloat32(floatVal);
+                outgoingMsg.WriteString(stringVal);
+                outgoingMsg.WriteFloatList(floatListVal);
+
+                incomingMsg = new IncomingMessage(outgoingMsg.ToByteArray());
+            }
+
+            Assert.AreEqual(boolVal, incomingMsg.ReadBoolean());
+            Assert.AreEqual(intVal, incomingMsg.ReadInt32());
+            Assert.AreEqual(floatVal, incomingMsg.ReadFloat32());
+            Assert.AreEqual(stringVal, incomingMsg.ReadString());
+            Assert.AreEqual(floatListVal, incomingMsg.ReadFloatList());
         }
     }
 }

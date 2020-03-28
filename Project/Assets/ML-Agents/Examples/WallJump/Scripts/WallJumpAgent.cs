@@ -4,7 +4,7 @@ using System.Collections;
 using UnityEngine;
 using MLAgents;
 using Barracuda;
-
+using MLAgents.Sensors;
 
 public class WallJumpAgent : Agent
 {
@@ -41,7 +41,7 @@ public class WallJumpAgent : Agent
     Vector3 m_JumpTargetPos;
     Vector3 m_JumpStartingPos;
 
-    public override void InitializeAgent()
+    public override void Initialize()
     {
         m_WallJumpSettings = FindObjectOfType<WallJumpSettings>();
         m_Configuration = Random.Range(0, 5);
@@ -132,12 +132,12 @@ public class WallJumpAgent : Agent
         }
     }
 
-    public override void CollectObservations()
+    public override void CollectObservations(VectorSensor sensor)
     {
         var agentPos = m_AgentRb.position - ground.transform.position;
 
-        AddVectorObs(agentPos / 20f);
-        AddVectorObs(DoGroundCheck(true) ? 1 : 0);
+        sensor.AddObservation(agentPos / 20f);
+        sensor.AddObservation(DoGroundCheck(true) ? 1 : 0);
     }
 
     /// <summary>
@@ -157,10 +157,10 @@ public class WallJumpAgent : Agent
     }
 
     /// <summary>
-    /// Chenges the color of the ground for a moment
+    /// Changes the color of the ground for a moment.
     /// </summary>
-    /// <returns>The Enumerator to be used in a Coroutine</returns>
-    /// <param name="mat">The material to be swaped.</param>
+    /// <returns>The Enumerator to be used in a Coroutine.</returns>
+    /// <param name="mat">The material to be swapped.</param>
     /// <param name="time">The time the material will remain.</param>
     IEnumerator GoalScoredSwapGroundMaterial(Material mat, float time)
     {
@@ -222,14 +222,14 @@ public class WallJumpAgent : Agent
         jumpingTime -= Time.fixedDeltaTime;
     }
 
-    public override void AgentAction(float[] vectorAction)
+    public override void OnActionReceived(float[] vectorAction)
     {
         MoveAgent(vectorAction);
         if ((!Physics.Raycast(m_AgentRb.position, Vector3.down, 20))
             || (!Physics.Raycast(m_ShortBlockRb.position, Vector3.down, 20)))
         {
             SetReward(-1f);
-            Done();
+            EndEpisode();
             ResetBlock(m_ShortBlockRb);
             StartCoroutine(
                 GoalScoredSwapGroundMaterial(m_WallJumpSettings.failMaterial, .5f));
@@ -265,7 +265,7 @@ public class WallJumpAgent : Agent
         if (col.gameObject.CompareTag("goal") && DoGroundCheck(true))
         {
             SetReward(1f);
-            Done();
+            EndEpisode();
             StartCoroutine(
                 GoalScoredSwapGroundMaterial(m_WallJumpSettings.goalScoredMaterial, 2));
         }
@@ -279,7 +279,7 @@ public class WallJumpAgent : Agent
         blockRb.angularVelocity = Vector3.zero;
     }
 
-    public override void AgentReset()
+    public override void OnEpisodeBegin()
     {
         ResetBlock(m_ShortBlockRb);
         transform.localPosition = new Vector3(
@@ -304,7 +304,8 @@ public class WallJumpAgent : Agent
     /// <param name="config">Config.
     /// If 0 : No wall and noWallBrain.
     /// If 1:  Small wall and smallWallBrain.
-    /// Other : Tall wall and BigWallBrain. </param>
+    /// Other : Tall wall and BigWallBrain.
+    /// </param>
     void ConfigureAgent(int config)
     {
         var localScale = wall.transform.localScale;
@@ -315,7 +316,7 @@ public class WallJumpAgent : Agent
                 Academy.Instance.FloatProperties.GetPropertyWithDefault("no_wall_height", 0),
                 localScale.z);
             wall.transform.localScale = localScale;
-            GiveModel("SmallWallJump", noWallBrain);
+            SetModel("SmallWallJump", noWallBrain);
         }
         else if (config == 1)
         {
@@ -324,7 +325,7 @@ public class WallJumpAgent : Agent
                 Academy.Instance.FloatProperties.GetPropertyWithDefault("small_wall_height", 4),
                 localScale.z);
             wall.transform.localScale = localScale;
-            GiveModel("SmallWallJump", smallWallBrain);
+            SetModel("SmallWallJump", smallWallBrain);
         }
         else
         {
@@ -336,7 +337,7 @@ public class WallJumpAgent : Agent
                 height,
                 localScale.z);
             wall.transform.localScale = localScale;
-            GiveModel("BigWallJump", bigWallBrain);
+            SetModel("BigWallJump", bigWallBrain);
         }
     }
 }

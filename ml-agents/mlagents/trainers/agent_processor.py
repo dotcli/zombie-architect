@@ -4,7 +4,7 @@ from collections import defaultdict, Counter, deque
 
 from mlagents_envs.base_env import BatchedStepResult, StepResult
 from mlagents.trainers.trajectory import Trajectory, AgentExperience
-from mlagents.trainers.tf_policy import TFPolicy
+from mlagents.trainers.policy.tf_policy import TFPolicy
 from mlagents.trainers.policy import Policy
 from mlagents.trainers.action_info import ActionInfo, ActionInfoOutputs
 from mlagents.trainers.stats import StatsReporter
@@ -65,9 +65,6 @@ class AgentProcessor:
         if take_action_outputs:
             for _entropy in take_action_outputs["entropy"]:
                 self.stats_reporter.add_stat("Policy/Entropy", _entropy)
-            self.stats_reporter.add_stat(
-                "Policy/Learning Rate", take_action_outputs["learning_rate"]
-            )
 
         terminated_agents: Set[str] = set()
         # Make unique agent_ids that are global across workers

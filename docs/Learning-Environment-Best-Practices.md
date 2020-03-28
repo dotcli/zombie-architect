@@ -8,8 +8,9 @@
   lessons which progressively increase in difficulty are presented to the agent
   ([learn more here](Training-Curriculum-Learning.md)).
 * When possible, it is often helpful to ensure that you can complete the task by
-  using a heuristic to control the agent. To do so, check the `Use Heuristic`
-  checkbox on the Agent and implement the `Heuristic()` method on the Agent.
+  using a heuristic to control the agent. To do so, set the `Behavior Type`
+  to `Heuristic Only` on the Agent's Behavior Parameters, and implement the
+   `Heuristic()` method on the Agent.
 * It is often helpful to make many copies of the agent, and give them the same
   `Behavior Name`. In this way the learning process can get more feedback
   information from all of these agents, which helps it train faster.
@@ -42,8 +43,8 @@
 * Besides encoding non-numeric values, all inputs should be normalized to be in
   the range 0 to +1 (or -1 to 1). For example, the `x` position information of
   an agent where the maximum possible value is `maxValue` should be recorded as
-  `AddVectorObs(transform.position.x / maxValue);` rather than
-  `AddVectorObs(transform.position.x);`. See the equation below for one approach
+  `VectorSensor.AddObservation(transform.position.x / maxValue);` rather than
+  `VectorSensor.AddObservation(transform.position.x);`. See the equation below for one approach
   of normalization.
 * Positional information of relevant GameObjects should be encoded in relative
   coordinates wherever possible. This is often relative to the agent position.

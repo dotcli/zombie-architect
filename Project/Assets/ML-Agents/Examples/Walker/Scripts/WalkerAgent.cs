@@ -1,6 +1,8 @@
 using UnityEngine;
 using MLAgents;
 using MLAgentsExamples;
+using MLAgents.Sensors;
+using MLAgents.SideChannels;
 
 public class WalkerAgent : Agent
 {
@@ -32,9 +34,9 @@ public class WalkerAgent : Agent
     Rigidbody m_ChestRb;
     Rigidbody m_SpineRb;
 
-    IFloatProperties m_ResetParams;
+    FloatPropertiesChannel m_ResetParams;
 
-    public override void InitializeAgent()
+    public override void Initialize()
     {
         m_JdController = GetComponent<JointDriveController>();
         m_JdController.SetupBodyPart(hips);
@@ -66,44 +68,44 @@ public class WalkerAgent : Agent
     /// <summary>
     /// Add relevant information on each body part to observations.
     /// </summary>
-    public void CollectObservationBodyPart(BodyPart bp)
+    public void CollectObservationBodyPart(BodyPart bp, VectorSensor sensor)
     {
         var rb = bp.rb;
-        AddVectorObs(bp.groundContact.touchingGround ? 1 : 0); // Is this bp touching the ground
-        AddVectorObs(rb.velocity);
-        AddVectorObs(rb.angularVelocity);
+        sensor.AddObservation(bp.groundContact.touchingGround ? 1 : 0); // Is this bp touching the ground
+        sensor.AddObservation(rb.velocity);
+        sensor.AddObservation(rb.angularVelocity);
         var localPosRelToHips = hips.InverseTransformPoint(rb.position);
-        AddVectorObs(localPosRelToHips);
+        sensor.AddObservation(localPosRelToHips);
 
         if (bp.rb.transform != hips && bp.rb.transform != handL && bp.rb.transform != handR &&
             bp.rb.transform != footL && bp.rb.transform != footR && bp.rb.transform != head)
         {
-            AddVectorObs(bp.currentXNormalizedRot);
-            AddVectorObs(bp.currentYNormalizedRot);
-            AddVectorObs(bp.currentZNormalizedRot);
-            AddVectorObs(bp.currentStrength / m_JdController.maxJointForceLimit);
+            sensor.AddObservation(bp.currentXNormalizedRot);
+            sensor.AddObservation(bp.currentYNormalizedRot);
+            sensor.AddObservation(bp.currentZNormalizedRot);
+            sensor.AddObservation(bp.currentStrength / m_JdController.maxJointForceLimit);
         }
     }
 
     /// <summary>
     /// Loop over body parts to add them to observation.
     /// </summary>
-    public override void CollectObservations()
+    public override void CollectObservations(VectorSensor sensor)
     {
         m_JdController.GetCurrentJointForces();
 
-        AddVectorObs(m_DirToTarget.normalized);
-        AddVectorObs(m_JdController.bodyPartsDict[hips].rb.position);
-        AddVectorObs(hips.forward);
-        AddVectorObs(hips.up);
+        sensor.AddObservation(m_DirToTarget.normalized);
+        sensor.AddObservation(m_JdController.bodyPartsDict[hips].rb.position);
+        sensor.AddObservation(hips.forward);
+        sensor.AddObservation(hips.up);
 
         foreach (var bodyPart in m_JdController.bodyPartsDict.Values)
         {
-            CollectObservationBodyPart(bodyPart);
+            CollectObservationBodyPart(bodyPart, sensor);
         }
     }
 
-    public override void AgentAction(float[] vectorAction)
+    public override void OnActionReceived(float[] vectorAction)
     {
         var bpDict = m_JdController.bodyPartsDict;
         var i = -1;
@@ -161,7 +163,7 @@ public class WalkerAgent : Agent
     /// <summary>
     /// Loop over body parts and reset them to initial conditions.
     /// </summary>
-    public override void AgentReset()
+    public override void OnEpisodeBegin()
     {
         if (m_DirToTarget != Vector3.zero)
         {

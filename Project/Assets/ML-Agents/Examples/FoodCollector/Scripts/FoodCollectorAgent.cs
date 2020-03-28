@@ -1,5 +1,6 @@
 using UnityEngine;
 using MLAgents;
+using MLAgents.Sensors;
 
 public class FoodCollectorAgent : Agent
 {
@@ -28,26 +29,24 @@ public class FoodCollectorAgent : Agent
     public bool useVectorObs;
 
 
-    public override void InitializeAgent()
+    public override void Initialize()
     {
-        base.InitializeAgent();
         m_AgentRb = GetComponent<Rigidbody>();
-        Monitor.verticalOffset = 1f;
         m_MyArea = area.GetComponent<FoodCollectorArea>();
         m_FoodCollecterSettings = FindObjectOfType<FoodCollectorSettings>();
 
         SetResetParameters();
     }
 
-    public override void CollectObservations()
+    public override void CollectObservations(VectorSensor sensor)
     {
         if (useVectorObs)
         {
             var localVelocity = transform.InverseTransformDirection(m_AgentRb.velocity);
-            AddVectorObs(localVelocity.x);
-            AddVectorObs(localVelocity.z);
-            AddVectorObs(System.Convert.ToInt32(m_Frozen));
-            AddVectorObs(System.Convert.ToInt32(m_Shoot));
+            sensor.AddObservation(localVelocity.x);
+            sensor.AddObservation(localVelocity.z);
+            sensor.AddObservation(System.Convert.ToInt32(m_Frozen));
+            sensor.AddObservation(System.Convert.ToInt32(m_Shoot));
         }
     }
 
@@ -202,7 +201,7 @@ public class FoodCollectorAgent : Agent
         gameObject.GetComponentInChildren<Renderer>().material = normalMaterial;
     }
 
-    public override void AgentAction(float[] vectorAction)
+    public override void OnActionReceived(float[] vectorAction)
     {
         MoveAgent(vectorAction);
     }
@@ -230,7 +229,7 @@ public class FoodCollectorAgent : Agent
         return action;
     }
 
-    public override void AgentReset()
+    public override void OnEpisodeBegin()
     {
         Unfreeze();
         Unpoison();

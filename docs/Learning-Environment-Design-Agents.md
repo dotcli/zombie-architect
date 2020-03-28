@@ -17,10 +17,11 @@ discover the optimal decision-making policy.
 The Policy class abstracts out the decision making logic from the Agent itself so
 that you can use the same Policy in multiple Agents. How a Policy makes its
 decisions depends on the kind of Policy it is. You can change the Policy of an
-Agent by changing its `Behavior Parameters`. If you check `Use Heuristic`, the
-Agent will use its `Heuristic()` method to make decisions which can allow you to
-control the Agent manually or write your own Policy. If the Agent has a `Model`
-file, it Policy will use the neural network `Model` to take decisions.
+Agent by changing its `Behavior Parameters`. If you set `Behavior Type` to
+`Heuristic Only`, the Agent will use its `Heuristic()` method to make decisions
+which can allow you to control the Agent manually or write your own Policy. If
+the Agent has a `Model` file, it Policy will use the neural network `Model` to
+take decisions.
 
 ## Decisions
 
@@ -45,18 +46,18 @@ state of the world. A state observation can take the following forms:
 * **Visual Observations** — one or more camera images and/or render textures.
 
 When you use vector observations for an Agent, implement the
-`Agent.CollectObservations()` method to create the feature vector. When you use
+`Agent.CollectObservations(VectorSensor sensor)` method to create the feature vector. When you use
 **Visual Observations**, you only need to identify which Unity Camera objects
 or RenderTextures will provide images and the base Agent class handles the rest.
-You do not need to implement the `CollectObservations()` method when your Agent
+You do not need to implement the `CollectObservations(VectorSensor sensor)` method when your Agent
 uses visual observations (unless it also uses vector observations).
 
 ### Vector Observation Space: Feature Vectors
 
 For agents using a continuous state space, you create a feature vector to
 represent the agent's observation at each step of the simulation. The Policy
-class calls the `CollectObservations()` method of each Agent. Your
-implementation of this function must call `AddVectorObs` to add vector
+class calls the `CollectObservations(VectorSensor sensor)` method of each Agent. Your
+implementation of this function must call `VectorSensor.AddObservation` to add vector
 observations.
 
 The observation must include all the information an agents needs to accomplish
@@ -78,16 +79,16 @@ noticeably worse.
 public GameObject ball;
 
 private List<float> state = new List<float>();
-public override void CollectObservations()
+public override void CollectObservations(VectorSensor sensor)
 {
-    AddVectorObs(gameObject.transform.rotation.z);
-    AddVectorObs(gameObject.transform.rotation.x);
-    AddVectorObs((ball.transform.position.x - gameObject.transform.position.x));
-    AddVectorObs((ball.transform.position.y - gameObject.transform.position.y));
-    AddVectorObs((ball.transform.position.z - gameObject.transform.position.z));
-    AddVectorObs(ball.transform.GetComponent<Rigidbody>().velocity.x);
-    AddVectorObs(ball.transform.GetComponent<Rigidbody>().velocity.y);
-    AddVectorObs(ball.transform.GetComponent<Rigidbody>().velocity.z);
+    sensor.AddObservation(gameObject.transform.rotation.z);
+    sensor.AddObservation(gameObject.transform.rotation.x);
+    sensor.AddObservation((ball.transform.position.x - gameObject.transform.position.x));
+    sensor.AddObservation((ball.transform.position.y - gameObject.transform.position.y));
+    sensor.AddObservation((ball.transform.position.z - gameObject.transform.position.z));
+    sensor.AddObservation(ball.transform.GetComponent<Rigidbody>().velocity.x);
+    sensor.AddObservation(ball.transform.GetComponent<Rigidbody>().velocity.y);
+    sensor.AddObservation(ball.transform.GetComponent<Rigidbody>().velocity.z);
 }
 ```
 
@@ -106,7 +107,7 @@ properties to use a continuous vector observation:
 The observation feature vector is a list of floating point numbers, which means
 you must convert any other data types to a float or a list of floats.
 
-The `AddVectorObs` method provides a number of overloads for adding common types
+The `VectorSensor.AddObservation` method provides a number of overloads for adding common types
 of data to your observation vector. You can add Integers and booleans directly to
 the observation vector, as well as some common Unity data types such as `Vector2`,
 `Vector3`, and `Quaternion`.
@@ -121,27 +122,27 @@ the feature vector. The following code example illustrates how to add.
 ```csharp
 enum CarriedItems { Sword, Shield, Bow, LastItem }
 private List<float> state = new List<float>();
-public override void CollectObservations()
+public override void CollectObservations(VectorSensor sensor)
 {
     for (int ci = 0; ci < (int)CarriedItems.LastItem; ci++)
     {
-        AddVectorObs((int)currentItem == ci ? 1.0f : 0.0f);
+        sensor.AddObservation((int)currentItem == ci ? 1.0f : 0.0f);
     }
 }
 ```
 
-`AddVectorObs` also provides a two-argument version as a shortcut for _one-hot_
+`VectorSensor.AddObservation` also provides a two-argument version as a shortcut for _one-hot_
 style observations. The following example is identical to the previous one.
 
 ```csharp
 enum CarriedItems { Sword, Shield, Bow, LastItem }
 const int NUM_ITEM_TYPES = (int)CarriedItems.LastItem;
 
-public override void CollectObservations()
+public override void CollectObservations(VectorSensor sensor)
 {
     // The first argument is the selection index; the second is the
     // number of possibilities
-    AddVectorObs((int)currentItem, NUM_ITEM_TYPES);
+    sensor.AddOneHotObservation((int)currentItem, NUM_ITEM_TYPES);
 }
 ```
 
@@ -269,7 +270,7 @@ setting the State Size.
 
 An action is an instruction from the Policy that the agent carries out. The
 action is passed to the Agent as a parameter when the Academy invokes the
-agent's `AgentAction()` function. When you specify that the vector action space
+agent's `OnActionReceived()` function. When you specify that the vector action space
 is **Continuous**, the action parameter passed to the Agent is an array of
 control signals with length equal to the `Vector Action Space Size` property.
 When you specify a **Discrete** vector action space type, the action parameter
@@ -284,10 +285,7 @@ Neither the Policy nor the training algorithm know anything about what the actio
 values themselves mean. The training algorithm simply tries different values for
 the action list and observes the affect on the accumulated rewards over time and
 many training episodes. Thus, the only place actions are defined for an Agent is
-in the `AgentAction()` function. You simply specify the type of vector action
-space, and, for the continuous vector action space, the number of values, and
-then apply the received values appropriately (and consistently) in
-`ActionAct()`.
+in the `OnActionReceived()` function.
 
 For example, if you designed an agent to move in two dimensions, you could use
 either continuous or the discrete vector actions. In the continuous case, you
@@ -312,7 +310,7 @@ up to use either the continuous or the discrete vector action spaces.
 ### Continuous Action Space
 
 When an Agent uses a Policy set to the **Continuous** vector action space, the
-action parameter passed to the Agent's `AgentAction()` function is an array with
+action parameter passed to the Agent's `OnActionReceived()` function is an array with
 length equal to the `Vector Action Space Size` property value.
 The individual values in the array have whatever meanings that you ascribe to
 them. If you assign an element in the array as the speed of an Agent, for
@@ -327,7 +325,7 @@ continuous action space with four control values.
 These control values are applied as torques to the bodies making up the arm:
 
 ```csharp
-public override void AgentAction(float[] act)
+public override void OnActionReceived(float[] act)
 {
     float torque_x = Mathf.Clamp(act[0], -1, 1) * 100f;
     float torque_z = Mathf.Clamp(act[1], -1, 1) * 100f;
@@ -347,7 +345,7 @@ As shown above, you can scale the control values as needed after clamping them.
 ### Discrete Action Space
 
 When an Agent uses a  **Discrete** vector action space, the
-action parameter passed to the Agent's `AgentAction()` function is an array
+action parameter passed to the Agent's `OnActionReceived()` function is an array
 containing indices. With the discrete vector action space, `Branches` is an
 array of integers, each value corresponds to the number of possibilities for
 each branch.
@@ -357,7 +355,7 @@ define two branches (one for motion and one for jumping) because we want our
 agent be able to move __and__ jump concurrently. We define the first branch to
 have 5 possible actions (don't move, go left, go right, go backward, go forward)
 and the second one to have 2 possible actions (don't jump, jump). The
-AgentAction method would look something like:
+`OnActionReceived()` method would look something like:
 
 ```csharp
 // Get the action index for movement
@@ -390,18 +388,20 @@ impossible for the next decision. When the Agent is controlled by a
 neural network, the Agent will be unable to perform the specified action. Note
 that when the Agent is controlled by its Heuristic, the Agent will
 still be able to decide to perform the masked action. In order to mask an
-action, call the method `SetActionMask` within the `CollectObservation` method :
+action,  override the `Agent.CollectDiscreteActionMasks()` virtual method, and call `DiscreteActionMasker.SetMask()` in it:
 
 ```csharp
-SetActionMask(branch, actionIndices)
+public override void CollectDiscreteActionMasks(DiscreteActionMasker actionMasker){
+    actionMasker.SetMask(branch, actionIndices)
+}
 ```
 
 Where:
 
 * `branch` is the index (starting at 0) of the branch on which you want to mask
   the action
-* `actionIndices` is a list of `int` or a single `int` corresponding to the
-  index of the action that the Agent cannot perform.
+* `actionIndices` is a list of `int` corresponding to the
+  indices of the actions that the Agent cannot perform.
 
 For example, if you have an Agent with 2 branches and on the first branch
 (branch 0) there are 4 possible actions : _"do nothing"_, _"jump"_, _"shoot"_
@@ -410,12 +410,12 @@ nothing"_ or _"change weapon"_ for his next decision (since action index 1 and 2
 are masked)
 
 ```csharp
-SetActionMask(0, new int[2]{1,2})
+SetMask(0, new int[2]{1,2})
 ```
 
 Notes:
 
-* You can call `SetActionMask` multiple times if you want to put masks on
+* You can call `SetMask` multiple times if you want to put masks on
   multiple branches.
 * You cannot mask all the actions of a branch.
 * You cannot mask actions in continuous control.
@@ -438,7 +438,7 @@ to display the cumulative reward received by an Agent. You can even use the
 Agent's Heuristic to control the Agent while watching how it accumulates rewards.
 
 Allocate rewards to an Agent by calling the `AddReward()` method in the
-`AgentAction()` function. The reward assigned between each decision
+`OnActionReceived()` function. The reward assigned between each decision
 should be in the range [-1,1]. Values outside this range can lead to
 unstable training. The `reward` value is reset to zero when the agent receives a
 new decision. If there are multiple calls to `AddReward()` for a single agent
@@ -448,7 +448,7 @@ previous rewards given to an agent since the previous decision.
 
 ### Examples
 
-You can examine the `AgentAction()` functions defined in the [example
+You can examine the `OnActionReceived()` functions defined in the [example
 environments](Learning-Environment-Examples.md) to see how those projects
 allocate rewards.
 
@@ -462,12 +462,12 @@ Collider[] hitObjects = Physics.OverlapBox(trueAgent.transform.position,
 if (hitObjects.Where(col => col.gameObject.tag == "goal").ToArray().Length == 1)
 {
     AddReward(1.0f);
-    Done();
+    EndEpisode();
 }
 if (hitObjects.Where(col => col.gameObject.tag == "pit").ToArray().Length == 1)
 {
     AddReward(-1f);
-    Done();
+    EndEpisode();
 }
 ```
 
@@ -489,7 +489,7 @@ if (gameObject.transform.position.y < 0.0f ||
     Mathf.Abs(gameObject.transform.position.x - area.transform.position.x) > 8f ||
     Mathf.Abs(gameObject.transform.position.z + 5 - area.transform.position.z) > 8)
 {
-    Done();
+    EndEpisode();
     AddReward(-1f);
 }
 ```
@@ -504,25 +504,24 @@ balances the ball. The agent can maximize its rewards by keeping the ball on the
 platform:
 
 ```csharp
-if (IsDone() == false)
-{
-    SetReward(0.1f);
-}
 
-// When ball falls mark Agent as done and give a negative penalty
+SetReward(0.1f);
+
+// When ball falls mark Agent as finished and give a negative penalty
 if ((ball.transform.position.y - gameObject.transform.position.y) < -2f ||
     Mathf.Abs(ball.transform.position.x - gameObject.transform.position.x) > 3f ||
     Mathf.Abs(ball.transform.position.z - gameObject.transform.position.z) > 3f)
 {
-    Done();
     SetReward(-1f);
+    EndEpisode();
+
 }
 ```
 
 The `Ball3DAgent` also assigns a negative penalty when the ball falls off the
 platform.
 
-Note that all of these environments make use of the `Done()` method, which manually
+Note that all of these environments make use of the `EndEpisode()` method, which manually
 terminates an episode when a termination condition is reached. This can be
 called independently of the `Max Step` property.
 
