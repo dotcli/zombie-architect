@@ -10,6 +10,7 @@ public class TriggerGoalB : MonoBehaviour {
 	void OnTriggerEnter(Collider col) {
 		if (col.gameObject.tag == "block") {
 			_Level.registerGoalB();
-		}
+            _Level.respawnBlock(col.gameObject);
+        }
 	}
 }

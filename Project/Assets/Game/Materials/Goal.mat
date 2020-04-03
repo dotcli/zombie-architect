@@ -5,7 +5,8 @@ Material:
   serializedVersion: 6
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
   m_Name: Goal
   m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
   m_ShaderKeywords: _ALPHAPREMULTIPLY_ON _EMISSION
@@ -74,4 +75,4 @@ Material:
     - _ZWrite: 0
     m_Colors:
     - _Color: {r: 0.4811321, g: 0.4811321, b: 0.4811321, a: 0.5294118}
-    - _EmissionColor: {r: 0, g: 0.3169406, b: 0.32987696, a: 1}
+    - _EmissionColor: {r: 0.32941177, g: 0.012983665, b: 0, a: 1}

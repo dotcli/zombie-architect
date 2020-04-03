@@ -64,7 +64,7 @@ public class ZomboxAgent : Agent
                 break;
         }
         transform.Rotate(rotateDir, Time.fixedDeltaTime * 200f);
-        agentRB.AddForce(dirToGo * Academy.Instance.FloatProperties.GetPropertyWithDefault("agentRunSpeed", 1f),
+        agentRB.AddForce(dirToGo * 2f,
                          ForceMode.VelocityChange);
 
     }

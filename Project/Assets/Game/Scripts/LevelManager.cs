@@ -29,8 +29,9 @@ public class LevelManager : MonoBehaviour {
 			);
 		}
 	}
+    // return a random place inside the non-goal area
 	Vector3 getRandomSpawnLocation() {
-		return new Vector3(Random.Range(-23.0f, 23.0f), 1.0f, Random.Range(-10.0f, 10.0f));
+		return new Vector3(Random.Range(-15.0f, 15.0f), 1.0f, Random.Range(-15.0f, 15.0f));
 	}
 	Vector3 getRandomVectorSmall() {
 		return new Vector3(Random.Range(-5.0f, 5.0f), 1.0f, Random.Range(-5.0f, 5.0f));
