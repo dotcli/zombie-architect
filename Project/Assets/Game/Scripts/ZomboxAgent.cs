@@ -13,8 +13,7 @@ public class ZomboxAgent : Agent
 
 
     Rigidbody agentRB;  //cached on initialization
-    //RayPerception rayPer;
-
+    
     public override void Initialize()
     {
         // Cache the agent rigidbody
@@ -22,18 +21,6 @@ public class ZomboxAgent : Agent
 
         resetVelocity();
     }
-
-    //public override void CollectObservations()
-    //{
-    //    if (useVectorObs)
-    //    {
-    //        var rayDistance = 36f;
-    //        float[] rayAngles = { 0f, 45f, 90f, 135f, 180f, 110f, 70f, 270f };
-    //        var detectableObjects = detectableTags.Split(' ');
-    //        AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 0f, 0f));
-    //        AddVectorObs(rayPer.Perceive(rayDistance, rayAngles, detectableObjects, 1.5f, 0f));
-    //    }
-    //}
 
     /// <summary>
     /// Moves the agent according to the selected action.
@@ -71,23 +58,23 @@ public class ZomboxAgent : Agent
 
     public override float[] Heuristic()
     {
-        if (Input.GetKey(KeyCode.D))
-        {
-            return new float[] { 3 };
-        }
         if (Input.GetKey(KeyCode.W))
         {
             return new float[] { 1 };
-        }
-        if (Input.GetKey(KeyCode.A))
-        {
-            return new float[] { 4 };
         }
         if (Input.GetKey(KeyCode.S))
         {
             return new float[] { 2 };
         }
-
+        if (Input.GetKey(KeyCode.D))
+        {
+            return new float[] { 3 };
+        }
+        if (Input.GetKey(KeyCode.A))
+        {
+            return new float[] { 4 };
+        }
+    
         return new float[] { 0 };
     }
 
