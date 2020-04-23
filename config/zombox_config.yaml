@@ -40,3 +40,6 @@ Zombox:
             gamma: 0.99
             encoding_size: 128
             demo_path: Project/Assets/Demonstrations/zombox.demo
+        extrinsic:
+            strength: 1.0
+            gamma: 0.99

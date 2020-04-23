@@ -53,12 +53,7 @@ public class LevelManager : MonoBehaviour {
 		ZomboxAgent ag = agent.GetComponent<ZomboxAgent>();
 		ag.resetVelocity();
 	}
-	public void respawnBlock(GameObject block) {
-		block.transform.localPosition = getRandomSpawnLocation();
-		Rigidbody blockRB = block.GetComponent<Rigidbody>();
-		blockRB.velocity = Vector3.zero;
-		blockRB.angularVelocity = Vector3.zero;
-	}
+	
 	public void registerGoalA() {
 		// TODO: increment score of A by 1
 		Debug.Log("A Score!");

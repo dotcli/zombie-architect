@@ -29,6 +29,12 @@ TagManager:
   - symbol_O_Goal
   - purpleAgent
   - purpleGoal
+  - edge
+  - goalB
+  - goalA
+  - agentB
+  - agentA
+  - fall
   layers:
   - Default
   - TransparentFX

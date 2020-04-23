@@ -10,7 +10,11 @@ public class TriggerGoalB : MonoBehaviour {
 	void OnTriggerEnter(Collider col) {
 		if (col.gameObject.tag == "block") {
 			_Level.registerGoalB();
-            _Level.respawnBlock(col.gameObject);
+            // find which agent is responsible for the goal,
+            // and reward them.
+            ZomboxBall ball = col.gameObject.GetComponent<ZomboxBall>();
+            ball.RewardAgent();
+            ball.Reset();
         }
 	}
 }

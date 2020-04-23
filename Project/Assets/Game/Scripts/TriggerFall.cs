@@ -17,7 +17,7 @@ public class TriggerFall : MonoBehaviour {
 					_Level.respawnAgentB(col.gameObject);
 					break;
 				case "block":
-					_Level.respawnBlock(col.gameObject);
+                    col.gameObject.GetComponent<ZomboxBall>().Reset();
 					break;
 				default:
 					Debug.Log("Oh no, a " + col.gameObject.tag + " fell.");

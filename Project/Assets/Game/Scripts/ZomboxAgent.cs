@@ -5,6 +5,16 @@ using MLAgents;
 
 public class ZomboxAgent : Agent
 {
+
+    [Header("Rewards")]
+    [Tooltip("Reward for scoring a goal")]
+    public float rewardScore = 1f;
+    [Tooltip("punishment that motivates agent to do stuff quickly")]
+    public float rewardAmbientOverMaxStep = -1f;
+    [Tooltip("punishment for going out of bound")]
+    public float rewardOutOfBound = -1f;
+    
+
     /// <summary>
     /// The area bounds.
     /// </summary>
@@ -85,6 +95,31 @@ public class ZomboxAgent : Agent
     {
         // Move the agent using the action.
         MoveAgent(vectorAction);
+
+        // Penalty given each step to encourage agent to finish task quickly
+        AddReward( rewardAmbientOverMaxStep / maxStep );
+    }
+
+    // Punish the agent when it gets out of bound
+    private void OnTriggerEnter(Collider other)
+    {
+        switch(other.gameObject.tag)
+        {
+            case "fall":
+                AddReward(rewardOutOfBound);
+                EndEpisode();
+                break;
+            default:
+                break;
+        }
+    }
+    /// <summary>
+    /// Reward the agent for scoreing a goal
+    /// </summary>
+    public void GetRewardedForGoal()
+    {
+        AddReward(rewardScore);
+        EndEpisode();
     }
 
     public void resetVelocity() {
