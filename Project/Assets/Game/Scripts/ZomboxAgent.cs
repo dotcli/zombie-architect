@@ -3,6 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using MLAgents;
 
+public enum ZomboxTeam
+{
+    A = 0,
+    B = 1
+}
+
 public class ZomboxAgent : Agent
 {
 
@@ -13,7 +19,8 @@ public class ZomboxAgent : Agent
     public float rewardAmbientOverMaxStep = -1f;
     [Tooltip("punishment for going out of bound")]
     public float rewardOutOfBound = -1f;
-    
+
+    public ZomboxTeam team;
 
     /// <summary>
     /// The area bounds.
@@ -26,6 +33,14 @@ public class ZomboxAgent : Agent
     
     public override void Initialize()
     {
+        // Assign team based on tag
+        if (gameObject.tag == "agentA")
+        {
+            team = ZomboxTeam.A;
+        } else if (gameObject.tag == "agentB")
+        {
+            team = ZomboxTeam.B;
+        }
         // Cache the agent rigidbody
         agentRB = GetComponent<Rigidbody>();
 
@@ -68,23 +83,19 @@ public class ZomboxAgent : Agent
 
     public override float[] Heuristic()
     {
-        if (Input.GetKey(KeyCode.W))
-        {
-            return new float[] { 1 };
+        // implementing for king tags, just in case we do this in the future
+        if (gameObject.tag == "agentA" || gameObject.tag == "kingA") {
+            if (Input.GetKey(KeyCode.W)) return new float[] { 1 };
+            if (Input.GetKey(KeyCode.S)) return new float[] { 2 };
+            if (Input.GetKey(KeyCode.D)) return new float[] { 3 };
+            if (Input.GetKey(KeyCode.A)) return new float[] { 4 };
+        } else if (gameObject.tag == "agentB" || gameObject.tag == "kingB") {
+            if (Input.GetKey(KeyCode.UpArrow)) return new float[] { 1 };
+            if (Input.GetKey(KeyCode.DownArrow)) return new float[] { 2 };
+            if (Input.GetKey(KeyCode.RightArrow)) return new float[] { 3 };
+            if (Input.GetKey(KeyCode.LeftArrow)) return new float[] { 4 };
         }
-        if (Input.GetKey(KeyCode.S))
-        {
-            return new float[] { 2 };
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            return new float[] { 3 };
-        }
-        if (Input.GetKey(KeyCode.A))
-        {
-            return new float[] { 4 };
-        }
-    
+
         return new float[] { 0 };
     }
 
@@ -114,11 +125,19 @@ public class ZomboxAgent : Agent
         }
     }
     /// <summary>
-    /// Reward the agent for scoreing a goal
+    /// Reward the agent for scoreing a goal for their team
+    /// and punish for scoring goal for enemy team
     /// </summary>
-    public void GetRewardedForGoal()
+    public void GetRewardedForGoal(ZomboxTeam goalTeam)
     {
-        AddReward(rewardScore);
+        if (team == goalTeam)
+        {
+            AddReward(rewardScore);
+        } else
+        {
+            AddReward(-rewardScore);
+        }
+
         EndEpisode();
     }
 

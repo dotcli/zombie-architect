@@ -13,7 +13,7 @@ public class TriggerGoalB : MonoBehaviour {
             // find which agent is responsible for the goal,
             // and reward them.
             ZomboxBall ball = col.gameObject.GetComponent<ZomboxBall>();
-            ball.RewardAgent();
+            ball.RewardAgent(ZomboxTeam.B);
             ball.Reset();
         }
 	}

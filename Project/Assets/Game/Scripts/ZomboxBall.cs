@@ -83,11 +83,11 @@ public class ZomboxBall : MonoBehaviour
     /// <summary>
     /// Reward the agents that last touched the ball
     /// </summary>
-    public void RewardAgent()
+    public void RewardAgent(ZomboxTeam goalTeam)
     {
         if (ActingAgent)
         {
-            ActingAgent.GetRewardedForGoal();
+            ActingAgent.GetRewardedForGoal(goalTeam);
         } else
         {
             Debug.LogWarning("The ball is scored but we couldn't find an acting agent.");

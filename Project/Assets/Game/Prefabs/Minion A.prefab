@@ -170,6 +170,7 @@ MonoBehaviour:
   rewardScore: 1
   rewardAmbientOverMaxStep: -1
   rewardOutOfBound: -1
+  team: 0
   areaBounds:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 0, y: 0, z: 0}
@@ -204,10 +205,10 @@ MonoBehaviour:
     vectorActionSize: 05000000
     vectorActionDescriptions: []
     vectorActionSpaceType: 0
-  m_Model: {fileID: 11400000, guid: 39d4a5a4fdb4e184187b2cec3063fbbd, type: 3}
+  m_Model: {fileID: 11400000, guid: 6d5e63251e322f547aac1b641b7ace42, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
-  m_BehaviorName: Zombox
+  m_BehaviorName: ZomboxA
   TeamId: 0
   m_UseChildSensors: 1
 --- !u!114 &114799468427159798

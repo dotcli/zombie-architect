@@ -14,8 +14,9 @@ GameObject:
   - component: {fileID: 65186923763892042}
   - component: {fileID: 8189435846002832349}
   - component: {fileID: 8288448532663973440}
-  - component: {fileID: 114842246564283842}
   - component: {fileID: 6134265464245150926}
+  - component: {fileID: 114842246564283842}
+  - component: {fileID: 6362769285652011999}
   m_Layer: 0
   m_Name: King A
   m_TagString: agentA
@@ -70,6 +71,9 @@ MonoBehaviour:
     maxStep: 5000
   hasUpgradedFromAgentParameters: 1
   maxStep: 5000
+  rewardScore: 1
+  rewardAmbientOverMaxStep: -1
+  rewardOutOfBound: -1
   areaBounds:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 0, y: 0, z: 0}
@@ -140,24 +144,9 @@ MonoBehaviour:
   m_Model: {fileID: 11400000, guid: 39d4a5a4fdb4e184187b2cec3063fbbd, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 1
-  m_BehaviorName: Zombox
+  m_BehaviorName: ZomboxA
   TeamId: 0
   m_UseChildSensors: 1
---- !u!114 &114842246564283842
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1445721744193366}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2902496c0120472b90269f94a0aec7e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  record: 0
-  demonstrationName: zombox
-  demonstrationDirectory: 
 --- !u!114 &6134265464245150926
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -191,6 +180,36 @@ MonoBehaviour:
   rayMissColor: {r: 1, g: 1, b: 1, a: 1}
   m_StartVerticalOffset: 1.5
   m_EndVerticalOffset: 1.5
+--- !u!114 &114842246564283842
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1445721744193366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2902496c0120472b90269f94a0aec7e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  record: 0
+  demonstrationName: zomboxA
+  demonstrationDirectory: 
+--- !u!114 &6362769285652011999
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1445721744193366}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DecisionPeriod: 5
+  TakeActionsBetweenDecisions: 1
+  offsetStep: 0
 --- !u!1 &1955813779121660
 GameObject:
   m_ObjectHideFlags: 0
