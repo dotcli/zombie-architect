@@ -167,6 +167,9 @@ MonoBehaviour:
     maxStep: 5000
   hasUpgradedFromAgentParameters: 1
   maxStep: 5000
+  rewardScore: 1
+  rewardAmbientOverMaxStep: -1
+  rewardOutOfBound: -1
   areaBounds:
     m_Center: {x: 0, y: 0, z: 0}
     m_Extent: {x: 0, y: 0, z: 0}
