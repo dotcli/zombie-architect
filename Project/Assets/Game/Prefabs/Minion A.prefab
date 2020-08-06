@@ -110,8 +110,8 @@ GameObject:
   - component: {fileID: 114640348029033860}
   - component: {fileID: 65136924533459294}
   - component: {fileID: 114224609740081820}
-  - component: {fileID: 114799468427159798}
   - component: {fileID: 114536394228784904}
+  - component: {fileID: 114799468427159798}
   - component: {fileID: 6360655076487258807}
   m_Layer: 0
   m_Name: Minion A
@@ -205,12 +205,27 @@ MonoBehaviour:
     vectorActionSize: 05000000
     vectorActionDescriptions: []
     vectorActionSpaceType: 0
-  m_Model: {fileID: 11400000, guid: 6d5e63251e322f547aac1b641b7ace42, type: 3}
+  m_Model: {fileID: 11400000, guid: a186875e2cbb7d9498ab7a62d968fe48, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: ZomboxA
   TeamId: 0
   m_UseChildSensors: 1
+--- !u!114 &114536394228784904
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1856902214048984}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DecisionPeriod: 5
+  TakeActionsBetweenDecisions: 1
+  offsetStep: 0
 --- !u!114 &114799468427159798
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -244,21 +259,6 @@ MonoBehaviour:
   rayMissColor: {r: 1, g: 1, b: 1, a: 1}
   m_StartVerticalOffset: 0.5
   m_EndVerticalOffset: 0.5
---- !u!114 &114536394228784904
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1856902214048984}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DecisionPeriod: 5
-  TakeActionsBetweenDecisions: 1
-  offsetStep: 0
 --- !u!114 &6360655076487258807
 MonoBehaviour:
   m_ObjectHideFlags: 0
